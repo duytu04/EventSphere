@@ -1,0 +1,22 @@
+﻿version: "3.9"
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: eventsphere
+    ports: ["3306:3306"]
+  backend:
+    build: ./backend
+    environment:
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      JWT_SECRET: dev-secret-change-me
+    ports: ["6868:6868"]
+    depends_on: [db]
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:6868
+    ports: ["5173:5173"]
+    depends_on: [backend]

@@ -1,0 +1,6 @@
+﻿target/
+node_modules/
+.vscode/
+.DS_Store
+.env
+.env.local
