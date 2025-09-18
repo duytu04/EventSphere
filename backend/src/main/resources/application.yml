@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update   # dev: update, prod: validate
+      ddl-auto: validate   # dev: update, prod: validate
     show-sql: true
     properties:
       hibernate:
@@ -28,3 +28,10 @@ spring:
 jwt:
   secret: "change_this_secret_key_to_strong_random_value"
   expiration: 86400   # seconds (1 day)
+admin:
+  email: ${ADMIN_EMAIL:admin@eventsphere.local}
+  password: ${ADMIN_PASSWORD:Admin@123}
+  name: ${ADMIN_NAME:System Administrator}
+logging:
+  level:
+    org.springframework.security: DEBUG

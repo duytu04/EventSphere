@@ -18,11 +18,10 @@
 
   <properties>
     <java.version>23</java.version>
-    <mapstruct.version>1.6.2</mapstruct.version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <!-- Giúp Maven compile đúng target Java -->
     <maven.compiler.release>23</maven.compiler.release>
+    <mapstruct.version>1.6.2</mapstruct.version>
+    <lombok.version>1.18.34</lombok.version>
+    <jjwt.version>0.11.5</jjwt.version>
   </properties>
 
   <dependencies>
@@ -60,18 +59,18 @@
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt-api</artifactId>
-      <version>0.11.5</version>
+      <version>${jjwt.version}</version>
     </dependency>
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt-impl</artifactId>
-      <version>0.11.5</version>
+      <version>${jjwt.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt-jackson</artifactId>
-      <version>0.11.5</version>
+      <version>${jjwt.version}</version>
       <scope>runtime</scope>
     </dependency>
 
@@ -91,19 +90,22 @@
       <version>11.7.2</version>
     </dependency>
 
-    <!-- tiện ích -->
+    <!-- Lombok (compile-time only) -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <optional>true</optional>
+      <version>${lombok.version}</version>
+      <scope>provided</scope>
     </dependency>
+
+    <!-- Swagger/OpenAPI -->
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
       <version>2.6.0</version>
     </dependency>
 
-    <!-- test -->
+    <!-- Test -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
@@ -113,19 +115,33 @@
 
   <build>
     <plugins>
-      <!-- Đóng gói/Run Spring Boot -->
+      <!-- Spring Boot run/package -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
 
-      <!-- Compiler đảm bảo dùng release 23 -->
+      <!-- Compiler: release + enable annotation processing (Lombok) -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.13.0</version>
         <configuration>
           <release>${maven.compiler.release}</release>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+            <!-- Nếu sau này dùng MapStruct, mở 2 block dưới:
+            <path>
+              <groupId>org.mapstruct</groupId>
+              <artifactId>mapstruct-processor</artifactId>
+              <version>${mapstruct.version}</version>
+            </path>
+            -->
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
     </plugins>
