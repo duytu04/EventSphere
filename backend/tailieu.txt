@@ -1,0 +1,702 @@
+Tuyệt vời—dưới đây là **bộ khung (scaffold) đầy đủ** cho EventSphere theo SRS bạn gửi: 1 backend Spring Boot (Java 23) + 1 frontend React (MUI) có **khu vực Admin riêng** (role-based). Cấu trúc này “đủ xương sống” để bạn paste code vào, build ngay, và mở rộng dần. Mình kèm theo các **file tối thiểu cần có** (stub) để dự án chạy được, kèm gợi ý endpoint/component và luồng dữ liệu.
+
+---
+
+# 1) Cấu trúc tổng thể repo
+
+```
+eventsphere/
+├─ README.md
+├─ .gitignore
+├─ .editorconfig
+├─ docker-compose.yml
+├─ .env.example
+├─ infra/
+│  ├─ mysql/
+│  │  ├─ init.sql
+│  │  └─ my.cnf
+│  └─ nginx/
+│     ├─ default.conf
+│     └─ Dockerfile
+├─ backend/
+│  ├─ pom.xml
+│  ├─ Dockerfile
+│  ├─ mvnw, mvnw.cmd, .mvn/
+│  ├─ src/
+│  │  ├─ main/java/com/eventsphere/...
+│  │  ├─ main/resources/
+│  │  └─ test/java/com/eventsphere/...
+│  └─ scripts/
+│     ├─ seed.sql
+│     └─ demo-data.sql
+└─ frontend/
+   ├─ package.json
+   ├─ vite.config.ts
+   ├─ Dockerfile
+   ├─ .env.example
+   └─ src/...
+```
+
+---
+
+# 2) Backend (Spring Boot 3.5.x, Java 23)
+
+## 2.1 Cấu trúc thư mục chi tiết
+
+```
+backend/
+├─ pom.xml
+├─ Dockerfile
+├─ src/
+│  ├─ main/java/com/eventsphere/
+│  │  ├─ EventSphereApplication.java
+│  │  ├─ config/
+│  │  │  ├─ OpenApiConfig.java
+│  │  │  ├─ SecurityConfig.java
+│  │  │  ├─ WebConfig.java
+│  │  │  ├─ CorsConfig.java
+│  │  │  ├─ AsyncConfig.java
+│  │  │  └─ WebSocketConfig.java
+│  │  ├─ core/
+│  │  │  ├─ exception/
+│  │  │  │  ├─ ApiException.java
+│  │  │  │  ├─ NotFoundException.java
+│  │  │  │  ├─ BadRequestException.java
+│  │  │  │  └─ GlobalExceptionHandler.java
+│  │  │  ├─ util/
+│  │  │  │  ├─ DateTimeUtils.java
+│  │  │  │  ├─ SlugUtils.java
+│  │  │  │  └─ PagedResponse.java
+│  │  │  └─ mapper/
+│  │  │     └─ MapStructConfig.java
+│  │  ├─ security/
+│  │  │  ├─ jwt/
+│  │  │  │  ├─ JwtAuthFilter.java
+│  │  │  │  ├─ JwtService.java
+│  │  │  │  └─ JwtProperties.java
+│  │  │  ├─ AuthFacade.java
+│  │  │  └─ Role.java
+│  │  ├─ users/
+│  │  │  ├─ model/
+│  │  │  │  ├─ User.java
+│  │  │  │  └─ UserDetailsExt.java
+│  │  │  ├─ repo/
+│  │  │  │  └─ UserRepository.java
+│  │  │  ├─ dto/
+│  │  │  │  ├─ AuthDtos.java   // LoginRequest, SignupRequest, Tokens, ProfileResponse
+│  │  │  │  └─ UserDtos.java   // UserResponse, UpdateProfileRequest
+│  │  │  ├─ service/
+│  │  │  │  ├─ UserService.java
+│  │  │  │  └─ UserServiceImpl.java
+│  │  │  └─ web/
+│  │  │     ├─ AuthController.java
+│  │  │     └─ UsersController.java
+│  │  ├─ events/
+│  │  │  ├─ model/
+│  │  │  │  ├─ Event.java
+│  │  │  │  ├─ Category.java
+│  │  │  │  └─ ApprovalStatus.java
+│  │  │  ├─ repo/
+│  │  │  │  └─ EventRepository.java
+│  │  │  ├─ dto/
+│  │  │  │  ├─ EventCreateRequest.java
+│  │  │  │  ├─ EventUpdateRequest.java
+│  │  │  │  ├─ EventResponse.java
+│  │  │  │  └─ EventStatsResponse.java
+│  │  │  ├─ service/
+│  │  │  │  ├─ EventService.java
+│  │  │  │  └─ EventServiceImpl.java
+│  │  │  └─ web/
+│  │  │     ├─ PublicEventsController.java
+│  │  │     ├─ OrganizerEventsController.java
+│  │  │     └─ AdminEventsController.java
+│  │  ├─ registrations/
+│  │  │  ├─ model/Registration.java
+│  │  │  ├─ repo/RegistrationRepository.java
+│  │  │  ├─ dto/{RegistrationCreateRequest.java, RegistrationResponse.java}
+│  │  │  ├─ service/{RegistrationService.java, RegistrationServiceImpl.java}
+│  │  │  └─ web/RegistrationsController.java
+│  │  ├─ attendance/
+│  │  │  ├─ model/Attendance.java
+│  │  │  ├─ repo/AttendanceRepository.java
+│  │  │  ├─ dto/{AttendanceMarkRequest.java, AttendanceResponse.java}
+│  │  │  ├─ service/{AttendanceService.java, AttendanceServiceImpl.java}
+│  │  │  └─ web/AttendanceController.java
+│  │  ├─ feedback/
+│  │  │  ├─ model/Feedback.java
+│  │  │  ├─ repo/FeedbackRepository.java
+│  │  │  ├─ dto/{FeedbackCreateRequest.java, FeedbackResponse.java}
+│  │  │  ├─ service/{FeedbackService.java, FeedbackServiceImpl.java}
+│  │  │  └─ web/FeedbackController.java
+│  │  ├─ media/
+│  │  │  ├─ model/MediaItem.java
+│  │  │  ├─ repo/MediaRepository.java
+│  │  │  ├─ dto/{MediaUploadRequest.java, MediaResponse.java}
+│  │  │  ├─ service/{MediaService.java, MediaServiceImpl.java}
+│  │  │  └─ web/MediaController.java
+│  │  ├─ certificates/
+│  │  │  ├─ model/Certificate.java
+│  │  │  ├─ repo/CertificateRepository.java
+│  │  │  ├─ dto/{CertificateIssueRequest.java, CertificateResponse.java}
+│  │  │  ├─ service/{CertificateService.java, CertificateServiceImpl.java}
+│  │  │  └─ web/CertificateController.java
+│  │  ├─ calendar/
+│  │  │  ├─ service/CalendarService.java
+│  │  │  └─ web/CalendarController.java  // /ics endpoints
+│  │  ├─ share/
+│  │  │  ├─ model/ShareLog.java
+│  │  │  ├─ repo/ShareLogRepository.java
+│  │  │  └─ web/ShareController.java
+│  │  ├─ venues/
+│  │  │  ├─ model/Venue.java
+│  │  │  ├─ repo/VenueRepository.java
+│  │  │  └─ web/VenueController.java
+│  │  ├─ seating/
+│  │  │  ├─ model/EventSeating.java
+│  │  │  ├─ repo/EventSeatingRepository.java
+│  │  │  ├─ service/{SeatingService.java, SeatingServiceImpl.java}
+│  │  │  └─ web/SeatingController.java
+│  │  ├─ waitlist/
+│  │  │  ├─ model/WaitlistEntry.java
+│  │  │  ├─ repo/WaitlistRepository.java
+│  │  │  ├─ service/{WaitlistService.java, WaitlistServiceImpl.java}
+│  │  │  └─ web/WaitlistController.java
+│  │  ├─ notifications/
+│  │  │  ├─ email/
+│  │  │  │  ├─ EmailService.java
+│  │  │  │  └─ RegistrationEmailListener.java
+│  │  │  ├─ eventbus/
+│  │  │  │  ├─ DomainEvents.java
+│  │  │  │  └─ SeatsChangedEvent.java
+│  │  │  └─ websocket/
+│  │  │     ├─ SeatsBroadcaster.java
+│  │  │     └─ WebSocketChannels.java
+│  │  └─ qr/
+│  │     ├─ QrService.java
+│  │     └─ web/QrController.java
+│  ├─ main/resources/
+│  │  ├─ application.yml
+│  │  ├─ templates/email/registration_success.html
+│  │  ├─ db/migration/  // Flyway scripts V1__init.sql, V2__add_indexes.sql...
+│  │  └─ static/ (optional)
+│  └─ test/java/com/eventsphere/...
+└─ scripts/
+   ├─ seed.sql
+   └─ demo-data.sql
+```
+
+## 2.2 `pom.xml` (những phần chính)
+
+```xml
+<project>
+  <properties>
+    <java.version>23</java.version>
+    <spring.boot.version>3.5.5</spring.boot.version>
+    <mapstruct.version>1.6.2</mapstruct.version>
+  </properties>
+  <dependencies>
+    <!-- Web, JPA, Validation -->
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-websocket</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-mail</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-thymeleaf</artifactId></dependency>
+
+    <!-- JWT -->
+    <dependency><groupId>io.jsonwebtoken</groupId><artifactId>jjwt-api</artifactId><version>0.11.5</version></dependency>
+    <dependency><groupId>io.jsonwebtoken</groupId><artifactId>jjwt-impl</artifactId><version>0.11.5</version><scope>runtime</scope></dependency>
+    <dependency><groupId>io.jsonwebtoken</groupId><artifactId>jjwt-jackson</artifactId><version>0.11.5</version><scope>runtime</scope></dependency>
+
+    <!-- DB -->
+    <dependency><groupId>com.mysql</groupId><artifactId>mysql-connector-j</artifactId><scope>runtime</scope></dependency>
+    <dependency><groupId>org.flywaydb</groupId><artifactId>flyway-core</artifactId></dependency>
+
+    <!-- MapStruct, Lombok -->
+    <dependency><groupId>org.mapstruct</groupId><artifactId>mapstruct</artifactId><version>${mapstruct.version}</version></dependency>
+    <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><optional>true</optional></dependency>
+
+    <!-- OpenAPI -->
+    <dependency><groupId>org.springdoc</groupId><artifactId>springdoc-openapi-starter-webmvc-ui</artifactId><version>2.6.0</version></dependency>
+
+    <!-- Test -->
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+  </dependencies>
+</project>
+```
+
+## 2.3 `application.yml` (rút gọn)
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/eventsphere?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USER:no-reply@example.com}
+    password: ${MAIL_PASS:app-password}
+    properties.mail.smtp.auth: true
+    properties.mail.smtp.starttls.enable: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+jwt:
+  secret: ${JWT_SECRET:dev-secret-at-least-256-bit}
+  expiration: 86400
+
+server:
+  port: 6868
+  servlet:
+    context-path: /
+```
+
+## 2.4 Các Controller “mỏ neo” (đường dẫn chính)
+
+* Public (khách + mọi người):
+
+  * `GET /api/public/events?status=UPCOMING|LIVE|PAST&category=...&q=...`
+  * `GET /api/public/events/{id}`
+  * `GET /api/public/media?eventId=...`
+* Auth:
+
+  * `POST /api/auth/signup`
+  * `POST /api/auth/login`
+  * `GET  /api/auth/me`
+* Participant:
+
+  * `POST /api/registrations` (đăng ký sự kiện)
+  * `DELETE /api/registrations/{id}` (hủy)
+  * `GET /api/registrations/my`
+  * `GET /api/certificates/my`
+  * `POST /api/feedback`
+* Organizer:
+
+  * `POST /api/organizer/events`
+  * `PUT /api/organizer/events/{id}`
+  * `GET /api/organizer/events?status=...`
+  * `POST /api/organizer/attendance/mark` (QR)
+  * `POST /api/organizer/certificates/issue`
+* Admin:
+
+  * `PUT /api/admin/events/{id}/approve`
+  * `PUT /api/admin/events/{id}/reject`
+  * `GET /api/admin/users?role=...`
+  * `PUT /api/admin/users/{id}/role`
+  * `GET /api/admin/analytics/overview`
+
+> Lưu ý: Bạn đã có nhiều file tương tự; cấu trúc này khớp với thói quen bạn dùng trước đó (AuthFacade, SeatsBroadcaster, After-Commit email, v.v.).
+
+---
+
+# 3) Frontend (React + Vite + MUI + React Router)
+
+## 3.1 Cấu trúc thư mục chi tiết
+
+```
+frontend/
+├─ package.json
+├─ vite.config.ts
+├─ tsconfig.json
+├─ .env.example
+├─ public/
+│  ├─ favicon.svg
+│  └─ robots.txt
+└─ src/
+   ├─ main.tsx
+   ├─ App.tsx
+   ├─ routes/
+   │  ├─ index.tsx               // định tuyến chính
+   │  ├─ ProtectedRoute.tsx
+   │  └─ AdminRoute.tsx
+   ├─ layout/
+   │  ├─ PublicLayout.tsx
+   │  ├─ AdminLayout.tsx
+   │  └─ OrganizerLayout.tsx
+   ├─ pages/
+   │  ├─ home/
+   │  │  └─ HomePage.tsx
+   │  ├─ events/
+   │  │  ├─ EventsListPage.tsx
+   │  │  └─ EventDetailPage.tsx
+   │  ├─ auth/
+   │  │  ├─ LoginPage.tsx
+   │  │  └─ SignupPage.tsx
+   │  ├─ dashboard/
+   │  │  ├─ ParticipantDashboard.tsx
+   │  │  ├─ MyRegistrations.tsx
+   │  │  ├─ MyCertificates.tsx
+   │  │  └─ MyMedia.tsx
+   │  ├─ organizer/
+   │  │  ├─ OrganizerDashboard.tsx
+   │  │  ├─ EventsManage.tsx
+   │  │  ├─ EventEditor.tsx       // tạo/sửa sự kiện
+   │  │  └─ AttendanceScan.tsx    // quét QR
+   │  └─ admin/
+   │     ├─ AdminDashboard.tsx
+   │     ├─ EventsApproval.tsx
+   │     ├─ UsersManage.tsx
+   │     ├─ AnalyticsOverview.tsx
+   │     └─ SystemSettings.tsx
+   ├─ components/
+   │  ├─ common/
+   │  │  ├─ Header.tsx
+   │  │  ├─ Footer.tsx
+   │  │  ├─ Breadcrumbs.tsx
+   │  │  └─ ConfirmDialog.tsx
+   │  ├─ events/
+   │  │  ├─ EventCard.tsx
+   │  │  ├─ EventFilters.tsx
+   │  │  └─ SeatsChip.tsx         // hiển thị seats realtime
+   │  ├─ media/
+   │  │  └─ Gallery.tsx
+   │  └─ admin/
+   │     ├─ StatCard.tsx
+   │     └─ UserRoleSelect.tsx
+   ├─ features/
+   │  ├─ auth/
+   │  │  ├─ authSlice.ts
+   │  │  └─ useAuth.ts
+   │  ├─ events/
+   │  │  ├─ eventsApi.ts
+   │  │  └─ useEventSeats.ts      // WebSocket seats
+   │  ├─ registrations/registrationsApi.ts
+   │  ├─ attendance/attendanceApi.ts
+   │  ├─ media/mediaApi.ts
+   │  └─ admin/adminApi.ts
+   ├─ api/
+   │  ├─ axiosClient.ts
+   │  ├─ endpoints.ts
+   │  └─ ws.ts                    // khởi tạo SockJS/STOMP nếu dùng
+   ├─ store/
+   │  ├─ index.ts
+   │  └─ rootReducer.ts
+   ├─ hooks/
+   │  └─ usePagination.ts
+   ├─ theme/
+   │  └─ theme.ts
+   └─ assets/
+      ├─ logos/
+      └─ images/
+```
+
+## 3.2 `endpoints.ts` (rút gọn)
+
+```ts
+export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:6868";
+
+export const ENDPOINTS = {
+  auth: {
+    login: `${API_BASE}/api/auth/login`,
+    signup: `${API_BASE}/api/auth/signup`,
+    me: `${API_BASE}/api/auth/me`,
+  },
+  public: {
+    events: `${API_BASE}/api/public/events`,
+    event: (id: number | string) => `${API_BASE}/api/public/events/${id}`,
+    media: `${API_BASE}/api/public/media`,
+  },
+  participant: {
+    regs: `${API_BASE}/api/registrations`,
+    myRegs: `${API_BASE}/api/registrations/my`,
+    myCerts: `${API_BASE}/api/certificates/my`,
+    feedback: `${API_BASE}/api/feedback`,
+  },
+  organizer: {
+    events: `${API_BASE}/api/organizer/events`,
+    attendanceMark: `${API_BASE}/api/organizer/attendance/mark`,
+    certificatesIssue: `${API_BASE}/api/organizer/certificates/issue`,
+  },
+  admin: {
+    eventsApprove: (id: number | string) => `${API_BASE}/api/admin/events/${id}/approve`,
+    eventsReject: (id: number | string) => `${API_BASE}/api/admin/events/${id}/reject`,
+    users: `${API_BASE}/api/admin/users`,
+    role: (id: number | string) => `${API_BASE}/api/admin/users/${id}/role`,
+    analytics: `${API_BASE}/api/admin/analytics/overview`,
+  },
+  ws: {
+    seats: `${API_BASE}/ws` // kênh STOMP /topic/seats
+  }
+};
+```
+
+## 3.3 `routes/index.tsx` (role-based: có Admin)
+
+```tsx
+import { createBrowserRouter } from "react-router-dom";
+import PublicLayout from "../layout/PublicLayout";
+import AdminLayout from "../layout/AdminLayout";
+import OrganizerLayout from "../layout/OrganizerLayout";
+import ProtectedRoute from "./ProtectedRoute";
+import AdminRoute from "./AdminRoute";
+
+import HomePage from "../pages/home/HomePage";
+import EventsListPage from "../pages/events/EventsListPage";
+import EventDetailPage from "../pages/events/EventDetailPage";
+import LoginPage from "../pages/auth/LoginPage";
+import SignupPage from "../pages/auth/SignupPage";
+
+import ParticipantDashboard from "../pages/dashboard/ParticipantDashboard";
+import OrganizerDashboard from "../pages/organizer/OrganizerDashboard";
+import EventsManage from "../pages/organizer/EventsManage";
+import EventEditor from "../pages/organizer/EventEditor";
+import AttendanceScan from "../pages/organizer/AttendanceScan";
+
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import EventsApproval from "../pages/admin/EventsApproval";
+import UsersManage from "../pages/admin/UsersManage";
+import AnalyticsOverview from "../pages/admin/AnalyticsOverview";
+
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <PublicLayout />,
+    children: [
+      { index: true, element: <HomePage /> },
+      { path: "events", element: <EventsListPage /> },
+      { path: "events/:id", element: <EventDetailPage /> },
+      { path: "login", element: <LoginPage /> },
+      { path: "signup", element: <SignupPage /> },
+      {
+        path: "me",
+        element: <ProtectedRoute><ParticipantDashboard /></ProtectedRoute>
+      }
+    ]
+  },
+  {
+    path: "/organizer",
+    element: <ProtectedRoute roles={["ORGANIZER","ADMIN"]}><OrganizerLayout /></ProtectedRoute>,
+    children: [
+      { index: true, element: <OrganizerDashboard /> },
+      { path: "events", element: <EventsManage /> },
+      { path: "events/new", element: <EventEditor /> },
+      { path: "events/:id/edit", element: <EventEditor /> },
+      { path: "attendance", element: <AttendanceScan /> }
+    ]
+  },
+  {
+    path: "/admin",
+    element: <AdminRoute><AdminLayout /></AdminRoute>,
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: "events-approval", element: <EventsApproval /> },
+      { path: "users", element: <UsersManage /> },
+      { path: "analytics", element: <AnalyticsOverview /> }
+    ]
+  }
+]);
+```
+
+---
+
+# 4) Mẫu file “tối thiểu” để chạy
+
+## 4.1 Backend – `Event.java` (rút gọn)
+
+```java
+@Entity @Table(name="events")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class Event {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long eventId;
+
+  @Enumerated(EnumType.STRING)
+  private Category category;
+
+  @Enumerated(EnumType.STRING)
+  @Builder.Default
+  private ApprovalStatus approvalStatus = ApprovalStatus.PENDING_APPROVAL;
+
+  private String title;
+  @Column(columnDefinition = "TEXT")
+  private String description;
+  private LocalDate date;
+  private LocalTime time;
+  private String venue;
+
+  private Long organizerId;
+
+  private Integer totalSeats;
+  private Integer seatsAvailable;
+
+  @Version
+  private Long version;
+
+  private LocalDate startDate;
+  private LocalDate endDate;
+
+  private String mainImageUrl;
+
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
+
+  @PrePersist void onCreate(){ createdAt = updatedAt = LocalDateTime.now(); }
+  @PreUpdate  void onUpdate(){ updatedAt = LocalDateTime.now(); }
+}
+```
+
+## 4.2 Backend – `PublicEventsController.java` (rút gọn)
+
+```java
+@RestController
+@RequestMapping("/api/public/events")
+@RequiredArgsConstructor
+public class PublicEventsController {
+  private final EventService events;
+
+  @GetMapping
+  public Page<EventResponse> list(@RequestParam Optional<String> status,
+                                  @RequestParam Optional<String> category,
+                                  @RequestParam Optional<String> q,
+                                  @PageableDefault(size=12, sort="date") Pageable pageable){
+    return events.searchPublic(status, category, q, pageable);
+  }
+
+  @GetMapping("/{id}")
+  public EventResponse detail(@PathVariable Long id){
+    return events.getPublicById(id);
+  }
+}
+```
+
+## 4.3 Frontend – `axiosClient.ts`
+
+```ts
+import axios from "axios";
+import { API_BASE } from "./endpoints";
+
+const client = axios.create({ baseURL: API_BASE, withCredentials: false });
+
+client.interceptors.request.use(cfg => {
+  const token = localStorage.getItem("access_token");
+  if (token) cfg.headers.Authorization = `Bearer ${token}`;
+  return cfg;
+});
+
+export default client;
+```
+
+## 4.4 Frontend – `ProtectedRoute.tsx` & `AdminRoute.tsx` (rút gọn)
+
+```tsx
+// ProtectedRoute.tsx
+import { Navigate } from "react-router-dom";
+import useAuth from "../features/auth/useAuth";
+
+export default function ProtectedRoute({ children, roles }:{ children: JSX.Element; roles?: string[]; }){
+  const { isAuthenticated, hasAnyRole } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (roles && !hasAnyRole(roles)) return <Navigate to="/" replace />;
+  return children;
+}
+```
+
+```tsx
+// AdminRoute.tsx
+import ProtectedRoute from "./ProtectedRoute";
+export default function AdminRoute({ children }:{ children: JSX.Element }){
+  return <ProtectedRoute roles={["ADMIN"]}>{children}</ProtectedRoute>;
+}
+```
+
+---
+
+# 5) Admin UI: các màn hình chính
+
+* **AdminDashboard**: tổng quan (cards: tổng user theo role, sự kiện (approved/pending), top departments, biểu đồ đăng ký theo tháng).
+* **EventsApproval**: bảng sự kiện `PENDING_APPROVAL` với actions **Approve / Reject** (gọi `PUT /api/admin/events/:id/approve|reject`).
+* **UsersManage**: danh sách user, chỉnh role (Student→Organizer), khóa/tạm ngưng.
+* **AnalyticsOverview**: biểu đồ line/bar (recharts) về registrations, attendance, feedback rating.
+
+Gợi ý DataGrid MUI cho bảng; `StatCard` cho metric; `recharts` cho biểu đồ.
+
+---
+
+# 6) Docker & Compose (dev)
+
+`docker-compose.yml` (rút gọn):
+
+```yaml
+version: "3.9"
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: eventsphere
+    ports: ["3306:3306"]
+    volumes:
+      - ./infra/mysql/init.sql:/docker-entrypoint-initdb.d/1-init.sql:ro
+  backend:
+    build: ./backend
+    environment:
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      JWT_SECRET: dev-secret-please-change
+    ports: ["6868:6868"]
+    depends_on: [db]
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:6868
+    ports: ["5173:5173"]
+    depends_on: [backend]
+```
+
+---
+
+# 7) Dữ liệu seed (khớp SRS)
+
+* `scripts/seed.sql`: tạo **roles**, 1 admin, 1 organizer, 1 student; vài **events** (UPCOMING/LIVE/PAST); **seats**; **media**; **waitlist** trống; **calendar/share** log bảng rỗng; **feedback** mẫu.
+* `frontend/src/assets/` thêm vài ảnh banner minh họa (link giả hoặc picsum).
+
+---
+
+# 8) Checklist khởi động nhanh
+
+1. **DB**: chạy MySQL (compose hoặc local), import `db/migration` (Flyway tự chạy).
+2. **Backend**:
+
+   * `mvn spring-boot:run`
+   * Swagger UI: `http://localhost:6868/swagger-ui.html`
+3. **Frontend**:
+
+   * `npm i`
+   * `VITE_API_BASE_URL=http://localhost:6868` trong `.env.local`
+   * `npm run dev` → `http://localhost:5173`
+4. Đăng nhập:
+
+   * Admin: `admin@eventsphere.dev / Admin@123`
+   * Organizer: `org@eventsphere.dev / Org@123`
+   * Student: `stu@eventsphere.dev / Stu@123`
+
+---
+
+# 9) Mở rộng đúng SRS (bạn đã làm sẵn một phần)
+
+* **Seats realtime**: `SeatsBroadcaster` bắn `/topic/seats.{eventId}`; FE `useEventSeats` subscribe → `SeatsChip`.
+* **QR check-in**: `QrController` phát token + `AttendanceScan` quét; `AttendanceService` mark attendance AFTER\_COMMIT → bắn seats.
+* **Email**: `RegistrationEmailListener` gửi template Thymeleaf `registration_success.html` sau khi đăng ký.
+* **ICS**: `CalendarController` trả về `.ics` khi user đăng ký thành công.
+* **Waitlist**: `WaitlistService` auto-promote khi có hủy (transaction + optimistic lock `@Version` ở Event).
+
+---
+
+# 10) Bạn cần gì tiếp theo?
+
+Mình đã “đóng khung” toàn bộ folder + file cốt lõi cho **backend** và **frontend (kèm admin)** đúng yêu cầu SRS. Bước kế tiếp, mình có thể:
+
+* Sinh **Flyway V1\_\_init.sql** đầy đủ bảng theo mẫu SRS của bạn (Users, UserDetails, Events, Registrations, Attendance, Feedback, Certificates, MediaGallery, EventSeating, Waitlist, CalendarSync, ShareLog) và **seed demo** khớp ba trạng thái **PAST/LIVE/UPCOMING**.
+* Tạo **mã stub** cho từng Controller/Service/Repo như khung trên để build chạy ngay (200–300 dòng cho mỗi domain là đủ demo).
+* Đổ **13 kịch bản JSON** import Postman (bạn vừa yêu cầu hôm qua) map đúng schema mới.
+
+Bạn muốn mình xuất **Flyway V1\_\_init.sql + seed.sql**, hay dựng bộ **stub code** cho `events/registrations/attendance` trước?

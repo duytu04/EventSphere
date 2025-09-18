@@ -1,22 +1,24 @@
-﻿import { Outlet, Routes, Route, Link, Navigate } from "react-router-dom";
+﻿
+
+
+import { Outlet, Link, useLocation } from "react-router-dom";
 import { Container, Tabs, Tab, Box } from "@mui/material";
-import AdminDashboard from "../pages/admin/AdminDashboard";
-import AdminEvents from "../pages/admin/AdminEvents";
 
 export default function AdminLayout(){
+  const { pathname } = useLocation();
+  // xác định tab theo URL: /admin (dashboard) hoặc /admin/events
+  const current = pathname.endsWith("/events") ? "events" : "dashboard";
+
   return (
-    <Container sx={{py:3}}>
-      <Box sx={{mb:2}}>
-        <Tabs value={0}>
-          <Tab label="Dashboard" component={Link} to="." />
- <Tab label="Events" component={Link} to="events" />
+    <Container sx={{ py: 3 }}>
+      <Box sx={{ mb: 2 }}>
+        <Tabs value={current}>
+          <Tab value="dashboard" label="Dashboard" component={Link} to="/admin" />
+          <Tab value="events"    label="Events"    component={Link} to="/admin/events" />
         </Tabs>
       </Box>
-      <Routes>
-        <Route index element={<AdminDashboard/>} />
- <Route path="events" element={<AdminEvents/>} />
-        <Route path="*" element={<Navigate to="." replace/>} />
-      </Routes>
+
+      {/* Đây là nơi render route con được khai báo ở App.tsx */}
       <Outlet/>
     </Container>
   );
