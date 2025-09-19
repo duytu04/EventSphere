@@ -1,4 +1,4 @@
-package src.main.java.com.eventsphere.core.mapper;
+package com.eventsphere.core.mapper;
 
 public class MapStructConfig {
     
