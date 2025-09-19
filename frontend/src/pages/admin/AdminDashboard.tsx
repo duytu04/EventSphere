@@ -1,4 +1,4 @@
-﻿import { Grid, Card, CardContent, Typography } from "@mui/material";
+import { Grid, Card, CardContent, Typography } from "@mui/material";
 
 export default function AdminDashboard(){
   return (
