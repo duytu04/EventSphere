@@ -681,7 +681,7 @@ export default function AdminDashboard() {
         <Grid item xs={12} md={5}>
           <Section title="Thao tác nhanh" action={<Chip icon={<AutoAwesomeIcon />} label="Gợi ý" size="small" />}>
             <Stack spacing={1}>
-              <Button variant="contained" href="/admin/events/new">Tạo sự kiện mới</Button>
+              <Button variant="contained" href="/admin/events">Tạo sự kiện mới</Button>
               <Button variant="outlined" href="/admin/events?status=PENDING_APPROVAL">Xem tất cả sự kiện chờ duyệt</Button>
               <Button variant="outlined" href="/admin/users">Quản lý người dùng</Button>
               <Button variant="outlined" href="/admin/reports">Báo cáo & Xuất dữ liệu</Button>

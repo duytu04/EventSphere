@@ -1,4 +1,6 @@
 
+
+
 package com.eventsphere.events.model;
 
 import java.time.LocalDateTime;
@@ -7,72 +9,80 @@ import lombok.*;
 
 @Entity
 @Table(name = "events")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor @Builder
 public class Event {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long eventId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "id")
+  private Long eventId; // giữ tên cũ
 
-    @Column(nullable = false, length = 200)
-    private String title;
+  @Column(name = "name", nullable = false, length = 200)
+  private String title; // map vào cột name
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
-    @Column(name = "main_image_url", length = 2048)
-    private String mainImageUrl;
-    private String category;
+  @Column(columnDefinition = "TEXT")
+  private String description;
 
-    @Column(length = 200)
-    private String venue;
+  @Column(name = "main_image_url", length = 512)
+  private String mainImageUrl;
 
-    @Column(name = "start_time", nullable = false)
-    private LocalDateTime startTime;
+  @Column(length = 60)
+  private String category;
 
-    @Column(name = "end_time", nullable = false)
-    private LocalDateTime endTime;
+  @Column(name = "location", length = 200)
+  private String venue; // map vào cột location
 
-    @Builder.Default
-    @Column(name = "total_seats", nullable = false)
-    private Integer totalSeats = 0;
+  @Column(name = "start_time", nullable = false)
+  private LocalDateTime startTime;
 
-    @Builder.Default
-    @Column(name = "seats_avail", nullable = false)
-    private Integer seatsAvail = 0;
+  @Column(name = "end_time", nullable = false)
+  private LocalDateTime endTime;
 
-    @Builder.Default
-    @Column(nullable = false, length = 20)
-    private String status = "DRAFT"; // DRAFT, PENDING_APPROVAL, APPROVED, REJECTED
+  @Builder.Default
+  @Column(name = "capacity", nullable = false)
+  private Integer totalSeats = 0; // map vào cột capacity
 
-    @Column(name = "organizer_id")
-    private Long organizerId;
+  @Builder.Default
+  @Column(name = "seats_available", nullable = false)
+  private Integer seatsAvail = 0; // map vào cột seats_available
 
-    @Builder.Default
-    @Version
-    @Column(nullable = false)
-    private Long version = 0L;
+  @Builder.Default
+  @Column(nullable = false, length = 30)
+  private String status = "DRAFT";
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+  @Column(name = "organizer_id")
+  private Long organizerId;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+  @Builder.Default
+  @Version
+  @Column(nullable = false)
+  private Long version = 0L;
 
-    @PrePersist
-    void onCreate() {
-        createdAt = updatedAt = LocalDateTime.now();
-        if (seatsAvail == null) {
-            seatsAvail = (totalSeats != null ? totalSeats : 0);
-        }
-    }
+  @Column(name = "created_at")
+  private LocalDateTime createdAt;
 
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+  @Column(name = "updated_at")
+  private LocalDateTime updatedAt;
+
+  @PrePersist
+  void onCreate() {
+    createdAt = updatedAt = LocalDateTime.now();
+    if (seatsAvail == null) seatsAvail = (totalSeats != null ? totalSeats : 0);
+    clampSeats();
+  }
+
+  @PreUpdate
+  void onUpdate() {
+    updatedAt = LocalDateTime.now();
+    clampSeats();
+  }
+
+  private void clampSeats() {
+    int cap = totalSeats != null ? Math.max(0, totalSeats) : 0;
+    int avail = seatsAvail != null ? Math.max(0, seatsAvail) : cap;
+    if (avail > cap) avail = cap;
+    totalSeats = cap;
+    seatsAvail = avail;
+  }
 }

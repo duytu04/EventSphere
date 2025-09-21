@@ -702,6 +702,166 @@ Mình đã “đóng khung” toàn bộ folder + file cốt lõi cho **backend*
 Bạn muốn mình xuất **Flyway V1\_\_init.sql + seed.sql**, hay dựng bộ **stub code** cho `events/registrations/attendance` trước?
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+Tuyệt! Đây là **lộ trình tiếp theo** mình đề xuất để đi từ MVP → production, chia theo sprint nhỏ, có đầu việc rõ + tiêu chí hoàn thành (AC = Acceptance Criteria).
+
+---
+
+# Sprint 1 — Auth + Users (JWT, Roles, Guard /admin)
+
+**BE**
+
+* Bảng & migration: `users`, `roles`, `user_roles`, (tuỳ chọn) `refresh_tokens`.
+* BCrypt password, JWT (access + optional refresh), stateless security.
+* Endpoint:
+
+  * `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh` (nếu dùng refresh),
+  * `GET /auth/me`,
+  * khoá `/api/admin/**` yêu cầu `ROLE_ADMIN`; mở `/api/ping`, `/auth/**`.
+* Seed V3 tạo admin mặc định (`admin@eventsphere.local` / password từ ENV).
+
+**FE**
+
+* Context Auth (React), lưu token (memory hoặc localStorage).
+* Trang `/login`, `/register`.
+* Route guard: chặn `/admin/**` nếu chưa login/không có `ROLE_ADMIN`.
+
+**AC**
+
+* Có thể đăng ký, đăng nhập, truy cập `/admin` khi là admin; logout hoạt động.
+* Swagger UI hiển thị toàn bộ auth flow.
+
+---
+
+# Sprint 2 — Events nâng cao (DTO, Validation, Search, Approval)
+
+**BE**
+
+* Tách DTO Request/Response, Bean Validation (tối thiểu: name, time hợp lệ).
+* Thêm trường: `status` (`DRAFT|PENDING|APPROVED|REJECTED`), `created_by`.
+* API:
+
+  * `GET /api/events?page=&size=&q=&from=&to=`
+  * `POST /api/events` (chỉ ROLE\_ADMIN hoặc creator),
+  * `PATCH /api/admin/events/{id}/status` (approve/reject, ROLE\_ADMIN).
+* Paging với Spring Data (`Page<EventDto>`).
+
+**FE**
+
+* Admin/Events: filter, sort, pagination; nút Approve/Reject; hiển thị badge status.
+* Public catalog (simple): list sự kiện đã `APPROVED`.
+
+**AC**
+
+* Tìm kiếm/paginate OK; chỉ admin đổi status; validation báo lỗi chuẩn.
+
+---
+
+# Sprint 3 — Registrations (đăng ký tham dự) + Capacity
+
+**BE**
+
+* Bảng `registrations (user_id, event_id, status, registered_at)` với unique index `(user_id,event_id)`.
+* Chốt capacity: từ chối đăng ký khi full; (tuỳ chọn) `WAITLIST`.
+* API:
+
+  * `POST /api/events/{id}/register` (user),
+  * `GET /api/me/registrations`,
+  * `GET /api/admin/events/{id}/registrations` (admin),
+  * `DELETE /api/me/registrations/{id}` (huỷ).
+* Export CSV danh sách đăng ký (admin).
+
+**FE**
+
+* Trang “Event Catalog” (public) có nút “Register” (yêu cầu login).
+* Admin xem danh sách đăng ký, export CSV.
+
+**AC**
+
+* Không đăng ký trùng; full thì báo rõ; export CSV tải được.
+
+---
+
+# Sprint 4 — Email & Notifications
+
+**BE**
+
+* Spring Mail + Thymeleaf template:
+
+  * gửi mail xác nhận đăng ký, mail approved/rejected event.
+* @Async cho tác vụ gửi mail; cấu hình SMTP từ ENV.
+
+**FE**
+
+* Toast thông báo sau hành động quan trọng; trạng thái gửi mail hiển thị thân thiện.
+
+**AC**
+
+* Mail gửi thành công qua SMTP dev; log fallback nếu lỗi.
+
+---
+
+# Sprint 5 — Ops & Chất lượng (Prod-ready)
+
+**BE**
+
+* Thay `ddl-auto:update` → **Flyway** toàn phần (đã bắt đầu); thêm baseline & versioning nghiêm túc.
+* Global exception handler (`@ControllerAdvice`) theo RFC 7807 / ProblemDetails.
+* Logging JSON + `X-Request-Id`; Rate limit (Bucket4j) cho `/auth/**`.
+* Caching (Caffeine → Redis optional) cho list events public.
+* Config profiles: `application-dev.yml`, `-prod.yml` (CORS, origins, db khác).
+
+**FE**
+
+* `.env` tách dev/prod; guard chắc chắn cho admin; i18n (vi/en) nếu cần.
+
+**CI/CD**
+
+* GitHub Actions:
+
+  1. Build BE (mvn test, package),
+  2. Build FE (npm ci, build),
+  3. Docker build & push cả 2 images,
+  4. Compose/Helm cho deploy.
+* Secret quản lý qua repo secrets hoặc Vault.
+
+**AC**
+
+* Pipeline xanh end-to-end; deploy staging bằng docker-compose.prod.
+
+---
+
+# Sprint 6 — Mở rộng (tuỳ ưu tiên)
+
+* **Payments** (mock trước, tích hợp cổng thật sau).
+* **Check-in/Attendance**: QR ticket, scan, thống kê.
+* **Reports**: doanh thu, tỷ lệ no-show, top events.
+* **Access Control chi tiết**: tổ chức (tenants), owner-based permission.
+
+---
+
+## Gợi ý thứ tự thực thi ngay
+
+1. **Sprint 1 (Auth + Users + Roles)** — nền tảng cho mọi thứ còn lại.
+2. Sprint 2 (Events approval + search/paging)
+3. Sprint 3 (Registrations + capacity)
+4. Sprint 4 (Email)
+5. Sprint 5 (Ops/CI/CD)
+
+Nếu bạn muốn, mình sẽ **đẩy luôn Sprint 1** (migrations + code BE/FE + seed admin + route guard) dưới dạng lệnh PowerShell copy-paste giống lần trước, để bạn chạy một phát là có đăng nhập & khoá `/admin`. Chỉ cần nói: **“triển khai Sprint 1”**.
+
 & "C:\Users\WINDOWS 11\Documents\apache-maven-3.9.6-bin\apache-maven-3.9.6\bin\mvn.cmd" -q -DskipTests spring-boot:run
 
 .\mvnw.cmd -q -DskipTests spring-boot:run

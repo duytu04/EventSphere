@@ -1,21 +1,38 @@
 
 
+
+
 // src/main/java/com/eventsphere/events/dto/EventCreateRequest.java
 package com.eventsphere.events.dto;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.*;
+import java.time.LocalDateTime;
 
 public record EventCreateRequest(
-    @NotBlank String name,         // FE: name  -> Entity: title
+    @NotBlank
+    @JsonAlias("name")                  // FE gửi "name" -> BE đọc title()
+    String title,                       // service dùng title()
+
     String description,
+
     String category,
-    String location,               // FE: location -> Entity: venue
+
+    @JsonAlias("location")              // FE gửi "location" -> BE đọc venue()
+    String venue,                       // service dùng venue()
+
     @NotNull LocalDateTime startTime,
     @NotNull LocalDateTime endTime,
-    @Min(0) Integer capacity ,      // FE: capacity -> Entity: totalSeats
-    @Size(max = 2048, message = "Đường dẫn ảnh quá dài (tối đa 2048 ký tự)")
-     String mainImageUrl            // 🔥 thêm: map -> Event.mainImageUrl
+
+    @Min(0)
+    @JsonAlias("capacity")              // FE gửi "capacity" -> BE đọc totalSeats()
+    Integer totalSeats,                 // service dùng totalSeats()
+
+    @Min(0)
+    @JsonAlias("seatsAvailable")        // FE gửi "seatsAvailable" -> BE đọc seatsAvail()
+    Integer seatsAvail,                 // service dùng seatsAvail()
+
+    @Size(max = 512, message = "Đường dẫn ảnh quá dài (tối đa 512 ký tự)") // khớp DB (VARCHAR(512))
+    @JsonAlias({"mainImageUrl","main_image_url"})
+    String mainImageUrl
 ) {}
-
-

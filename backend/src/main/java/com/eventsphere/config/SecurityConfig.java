@@ -64,7 +64,8 @@ public class SecurityConfig {
        
         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
         .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
-        .requestMatchers("/api/public/**").permitAll()
+        .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
+
         // Organizer-only
         .requestMatchers("/api/organizer/**").hasRole("ORGANIZER")
         // Admin-only

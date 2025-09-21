@@ -34,20 +34,21 @@ public class PublicEventsController {
   }
 
   /* mapper: Entity -> FE DTO */
-  private static EventResponse map(Event e){
-    return new EventResponse(
-      e.getEventId(),                 // id
-      e.getTitle(),              // name
+private static EventResponse map(Event e) {
+  return new EventResponse(
+      e.getEventId(),       // id
+      e.getTitle(),         // name
       e.getDescription(),
-      e.getMainImageUrl(),      // 🔥 thêm: map đúng
       e.getCategory(),
-      e.getVenue(),              // location
+      e.getVenue(),         // location
+      e.getMainImageUrl(),  // mainImageUrl (thứ tự #6)
       e.getStartTime(),
       e.getEndTime(),
-      e.getSeatsAvail(),         // seatsAvailable
-      e.getTotalSeats(),         // capacity
+      e.getSeatsAvail(),    // seatsAvailable
+      e.getTotalSeats(),    // capacity
       e.getStatus(),
       e.getVersion()
-    );
-  }
+  );
+}
+
 }
