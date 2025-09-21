@@ -700,3 +700,8 @@ Mình đã “đóng khung” toàn bộ folder + file cốt lõi cho **backend*
 * Đổ **13 kịch bản JSON** import Postman (bạn vừa yêu cầu hôm qua) map đúng schema mới.
 
 Bạn muốn mình xuất **Flyway V1\_\_init.sql + seed.sql**, hay dựng bộ **stub code** cho `events/registrations/attendance` trước?
+
+
+& "C:\Users\WINDOWS 11\Documents\apache-maven-3.9.6-bin\apache-maven-3.9.6\bin\mvn.cmd" -q -DskipTests spring-boot:run
+
+.\mvnw.cmd -q -DskipTests spring-boot:run
