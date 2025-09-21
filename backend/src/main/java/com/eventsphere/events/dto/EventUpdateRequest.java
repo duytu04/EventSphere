@@ -7,6 +7,7 @@ import jakarta.validation.constraints.*;
 public record EventUpdateRequest(
   @NotBlank String title,
   String description,
+  String mainImageUrl,
   String category,
   String venue,
   @NotNull LocalDateTime startTime,
