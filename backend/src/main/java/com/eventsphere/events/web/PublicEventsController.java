@@ -39,6 +39,7 @@ public class PublicEventsController {
       e.getEventId(),                 // id
       e.getTitle(),              // name
       e.getDescription(),
+      e.getMainImageUrl(),      // 🔥 thêm: map đúng
       e.getCategory(),
       e.getVenue(),              // location
       e.getStartTime(),

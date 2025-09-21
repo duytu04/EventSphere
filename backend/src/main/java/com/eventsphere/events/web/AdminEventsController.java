@@ -75,6 +75,7 @@ public PagedResponse<EventResponse> list(
         e.getEventId(),
         e.getTitle(),
         e.getDescription(),
+        e.getMainImageUrl(),
         e.getCategory(),
         e.getVenue(),
         e.getStartTime(),
@@ -86,3 +87,5 @@ public PagedResponse<EventResponse> list(
     );
   }
 }
+
+
