@@ -1,4 +1,4 @@
-package src.main.java.com.eventsphere.core.exception;
+package com.eventsphere.core.exception;
 
 public class ApiException {
     

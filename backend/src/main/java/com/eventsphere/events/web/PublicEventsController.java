@@ -35,6 +35,9 @@ public class PublicEventsController {
 
   /* mapper: Entity -> FE DTO */
 private static EventResponse map(Event e) {
+  int total = e.getTotalSeats() != null ? e.getTotalSeats() : 0;
+  int available = e.getSeatsAvail() != null ? e.getSeatsAvail() : total;
+  long attendeesCount = Math.max(0, total - available);
   return new EventResponse(
       e.getEventId(),       // id
       e.getTitle(),         // name
@@ -47,7 +50,8 @@ private static EventResponse map(Event e) {
       e.getSeatsAvail(),    // seatsAvailable
       e.getTotalSeats(),    // capacity
       e.getStatus(),
-      e.getVersion()
+      e.getVersion(),
+      attendeesCount
   );
 }
 

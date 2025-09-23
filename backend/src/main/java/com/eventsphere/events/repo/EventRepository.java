@@ -1,10 +1,12 @@
-// src/main/java/com/eventsphere/events/repo/EventRepository.java
 package com.eventsphere.events.repo;
 
 import com.eventsphere.events.model.Event;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.*;
-import org.springframework.data.repository.query.Param; // <-- import này
+import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
   @Query("""
@@ -19,4 +21,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                      Pageable pageable);
 
   long countByStatus(String status);
+
+  List<Event> findTop5ByStatusOrderByStartTimeAsc(String status);
 }
+

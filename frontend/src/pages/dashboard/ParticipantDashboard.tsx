@@ -136,12 +136,21 @@ function escapeIcs(s: string) {
 /* =========================================================
  * Component chính
  * =======================================================*/
-export default function EventParticipantDashboard() {
+type ParticipantDashboardProps = {
+  eventId?: number | null;
+};
+
+export default function EventParticipantDashboard({ eventId: eventIdProp }: ParticipantDashboardProps = {}) {
   const params = useParams();
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
-  const eventId = Number(params.id);
+  const routeEventId = params.id ?? (params as any).eventId ?? null;
+  const eventId = useMemo(() => {
+    if (typeof eventIdProp === "number") return eventIdProp;
+    return routeEventId != null ? Number(routeEventId) : Number.NaN;
+  }, [eventIdProp, routeEventId]);
+  const hasValidEventId = Number.isFinite(eventId) && eventId > 0;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [ev, setEv] = useState<EventResponse | null>(null);
@@ -151,16 +160,27 @@ export default function EventParticipantDashboard() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      try {
+      if (!hasValidEventId) {
+        if (mounted) {
+          setError("ID sự kiện không hợp lệ");
+          setEv(null);
+          setMyReg(null);
+          setLoading(false);
+        }
+        return;
+      }
+      if (mounted) {
         setLoading(true);
         setError(null);
+      }
+      try {
         const e = await fetchPublicEventById(eventId);
         const r = await fetchMyRegistrationForEvent(eventId);
         if (!mounted) return;
         setEv(e);
         setMyReg(r);
       } catch (e: any) {
-        setError(e?.message ?? "Không tải được chi tiết sự kiện");
+        if (mounted) setError(e?.message ?? "Không tải được chi tiết sự kiện");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -168,7 +188,7 @@ export default function EventParticipantDashboard() {
     return () => {
       mounted = false;
     };
-  }, [eventId]);
+  }, [eventId, hasValidEventId]);
 
   const isEnded = useMemo(() => (ev ? new Date(ev.endTime).getTime() < Date.now() : false), [ev]);
   const seatsLeft = ev?.seatsAvailable ?? 0;
@@ -426,3 +446,8 @@ export default function EventParticipantDashboard() {
     </Box>
   );
 }
+
+
+
+
+
