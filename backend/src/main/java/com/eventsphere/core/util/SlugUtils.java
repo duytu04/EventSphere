@@ -1,4 +1,4 @@
-package src.main.java.com.eventsphere.core.util;
+package com.eventsphere.core.util;
 
 public class SlugUtils {
     

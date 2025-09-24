@@ -23,8 +23,8 @@ export const ENDPOINTS = {
 
   // 🔷 PUBLIC (list/detail sự kiện công khai)
   public: {
-    events: `${API_BASE}/api/public/events`,
-    event:  (id: number | string) => `${API_BASE}/api/public/events/${id}`,
+    events: `${API_BASE}/api/events`,
+    event:  (id: number | string) => `${API_BASE}/api/events/${id}`,
   },
 
   // 🟣 ORGANIZER (quản lý sự kiện của organizer)
@@ -53,3 +53,5 @@ export const ENDPOINTS = {
     seats: `${API_BASE}/ws`, // ví dụ: subscribe /topic/seats.{eventId}
   },
 };
+
+

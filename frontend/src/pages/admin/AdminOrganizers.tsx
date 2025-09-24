@@ -1,38 +1,4 @@
-// // Liệt kê: GET /api/admin/users?role=ORGANIZER...
 
-// // Promote/demote: POST /api/admin/users/{id}/roles
-
-
-
-
-// import { useEffect, useState } from "react";
-// import { Box, Typography, Button, Stack, TextField } from "@mui/material";
-
-// export default function AdminOrganizers() {
-//   const [q, setQ] = useState("");
-//   // TODO: gọi API GET /api/admin/users?role=ORGANIZER&q=&page=&size=
-//   useEffect(() => {
-//     // fetch organizers ở đây
-//   }, []);
-
-//   return (
-//     <Box>
-//       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-//         <Typography variant="h5">Organizers</Typography>
-//         <Button variant="contained">Create Organizer</Button>
-//       </Stack>
-
-//       <Stack direction="row" spacing={2} mb={2}>
-//         <TextField size="small" label="Search" value={q} onChange={(e)=>setQ(e.target.value)} />
-//       </Stack>
-
-//       {/* TODO: DataGrid/List organizers + promote/demote, edit profile */}
-//       <Typography variant="body2" color="text.secondary">
-//         (WIP) TODO: render bảng Organizers, promote/demote role, CRUD.
-//       </Typography>
-//     </Box>
-//   );
-// }
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {

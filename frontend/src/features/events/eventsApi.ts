@@ -47,11 +47,11 @@ export type EventUpdatePayload = Partial<EventCreatePayload> & {
 
 /* ================== URL helpers (có fallback) ================== */
 const publicListUrl =
-  (ENDPOINTS.public as any)?.events ?? "/api/public/events";
+  (ENDPOINTS.public as any)?.events ?? "/api/events";
 const publicDetailUrl = (id: number | string) =>
   (ENDPOINTS.public as any)?.event
     ? (ENDPOINTS.public as any).event(id)
-    : `/api/public/events/${id}`;
+    : `/api/events/${id}`;
 
 const adminListUrl =
   (ENDPOINTS.admin as any)?.events ?? "/api/admin/events";
@@ -102,7 +102,7 @@ export async function fetchPublicEvents(params?: {
   page?: number;
   size?: number;
 }) {
-  const { q = "", status, page = 0, size = 10 } = params ?? {};
+  const { q = "", status = "APPROVED", page = 0, size = 10 } = params ?? {};
   const { data } = await api.get(publicListUrl, { params: { q, status, page, size } });
   return normalizePage(data);
 }
@@ -190,3 +190,6 @@ export async function updateOrganizerEvent(id: number, payload: EventUpdatePaylo
 export async function deleteOrganizerEvent(id: number) {
   await api.delete(organizerEventUrl(id));
 }
+
+
+

@@ -1,164 +1,102 @@
+import { Box, CssBaseline } from "@mui/material";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
-
-// import {
-//   CssBaseline,
-//   ThemeProvider,
-//   createTheme,
-//   AppBar,
-//   Toolbar,
-//   Typography,
-//   Container,
-//   Button,
-//   Box,
-// } from "@mui/material";
-// import { Routes, Route, Link, Navigate } from "react-router-dom";
-
-// import AdminLayout from "./layout/AdminLayout";
-// import AdminDashboard from "./pages/admin/AdminDashboard";
-
-// import LoginPage from "./pages/auth/LoginPage";
-// import SignupPage from "./pages/auth/SignupPage";
-// import ForbiddenPage from "./pages/ForbiddenPage";
-// import AdminRoute from "./routes/AdminRoute";
-// import AdminEvents from "./pages/admin/AdminEvents";
-
-// const theme = createTheme();
-
-// function Home() {
-//   return (
-//     <Container sx={{ py: 4 }}>
-//       <Typography variant="h4" gutterBottom>EventSphere</Typography>
-//       <Typography>Frontend is up. Go to <Link to="/admin">Admin</Link>.</Typography>
-//     </Container>
-//   );
-// }
-
-// export default function App() {
-//   return (
-//     <ThemeProvider theme={theme}>
-//       <CssBaseline />
-
-//       <AppBar position="static">
-//         <Toolbar>
-//           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-//             EventSphere
-//           </Typography>
-//           <Button color="inherit" component={Link} to="/">Home</Button>
-//           <Button color="inherit" component={Link} to="/admin">Admin</Button>
-//           <Button color="inherit" component={Link} to="/login">Login</Button>
-//           <Button color="inherit" component={Link} to="/signup">Signup</Button>
-//         </Toolbar>
-//       </AppBar>
-
-//       <Box sx={{ py: 2 }}>
-//         <Routes>
-//           {/* Public */}
-//           <Route index element={<Home />} />
-//           <Route path="login" element={<LoginPage />} />
-//           <Route path="signup" element={<SignupPage />} />
-//           <Route path="forbidden" element={<ForbiddenPage />} />
-
-//           {/* Admin (guarded) */}
-//           <Route
-//             path="admin/*"
-//             element={
-//               <AdminRoute>
-//                 <AdminLayout />
-//               </AdminRoute>
-//             }
-//           >
-//             <Route index element={<AdminDashboard />} />
-//              <Route path="events" element={<AdminEvents />} />   {/* <-- THÊM DÒNG NÀY */}
-//           </Route>
-
-//           {/* Fallback */}
-//           <Route path="*" element={<Navigate to="/" replace />} />
-//         </Routes>
-//       </Box>
-//     </ThemeProvider>
-//   );
-// }
-
-
-import {
-  CssBaseline,
-  ThemeProvider,
-  createTheme,
-  AppBar,
-  Toolbar,
-  Typography,
-  Container,
-  Button,
-  Box,
-} from "@mui/material";
-import { Routes, Route, Link, Navigate } from "react-router-dom";
-
-import AdminLayout from "./layout/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminEvents from "./pages/admin/AdminEvents";
-import AdminUsers from "./pages/admin/AdminUsers";           // <-- NEW
-import AdminOrganizers from "./pages/admin/AdminOrganizers"; // <-- NEW
-
+import HomePage from "./pages/home/HomePage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import ForbiddenPage from "./pages/ForbiddenPage";
+import EventsListPage from "./pages/events/EventsListPage";
+import EventDetailPage from "./pages/events/EventDetailPage";
 import AdminRoute from "./routes/AdminRoute";
-
-const theme = createTheme();
-
-function Home() {
-  return (
-    <Container sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>EventSphere</Typography>
-      <Typography>Frontend is up. Go to <Link to="/admin">Admin</Link>.</Typography>
-    </Container>
-  );
-}
+import OrganizerRoute from "./routes/OrganizerRoute";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import AdminLayout from "./layout/AdminLayout";
+import OrganizerLayout from "./layout/OrganizerLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminEvents from "./pages/admin/AdminEvents";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminOrganizers from "./pages/admin/AdminOrganizers";
+import OrganizerDashboard from "./pages/organizer/OrganizerDashboard";
+import ParticipantLayout from "./layout/ParticipantLayout";
+import MyRegistrations from "./pages/dashboard/MyRegistrations";
+import MyCertificates from "./pages/dashboard/MyCertificates";
+import MyMedia from "./pages/dashboard/MyMedia";
+import ParticipantDashboard from "./pages/dashboard/ParticipantDashboard";
+import EventsManage from "./pages/organizer/EventsManage";
+import EventEditor from "./pages/organizer/EventEditor";
+import AttendanceScan from "./pages/organizer/AttendanceScan";
+import ColorModeProvider from "./theme/theme";
+import Header from "./components/common/Header";
+import Footer from "./components/common/Footer";
 
 export default function App() {
+  const location = useLocation();
+  const hideFooter = location.pathname.startsWith("/admin") || location.pathname.startsWith("/organizer") || location.pathname.startsWith("/dashboard");
+
   return (
-    <ThemeProvider theme={theme}>
+    <ColorModeProvider>
       <CssBaseline />
-
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            EventSphere
-          </Typography>
-          <Button color="inherit" component={Link} to="/">Home</Button>
-          <Button color="inherit" component={Link} to="/admin">Admin</Button>
-          <Button color="inherit" component={Link} to="/login">Login</Button>
-          <Button color="inherit" component={Link} to="/signup">Signup</Button>
-        </Toolbar>
-      </AppBar>
-
-      <Box sx={{ py: 2 }}>
-        <Routes>
-          {/* Public */}
-          <Route index element={<Home />} />
-          <Route path="login" element={<LoginPage />} />
-          <Route path="signup" element={<SignupPage />} />
-          <Route path="forbidden" element={<ForbiddenPage />} />
-
-          {/* Admin (guarded) */}
-          <Route
-            path="admin/*"
-            element={
-              <AdminRoute>
-                <AdminLayout />
-              </AdminRoute>
-            }
-          >
-            <Route index element={<AdminDashboard />} />
-            <Route path="events" element={<AdminEvents />} />
-            <Route path="users" element={<AdminUsers />} />               {/* <-- NEW */}
-            <Route path="organizers" element={<AdminOrganizers />} />     {/* <-- NEW */}
-          </Route>
-
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+      <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", backgroundColor: "background.default" }}>
+        <Header />
+        <Box component="main" sx={{ flexGrow: 1 }}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="login" element={<LoginPage />} />
+            <Route path="signup" element={<SignupPage />} />
+            <Route path="forbidden" element={<ForbiddenPage />} />
+            <Route path="events" element={<EventsListPage />} />
+            <Route path="events/:id" element={<EventDetailPage />} />
+            <Route
+              path="admin/*"
+              element={
+                <AdminRoute>
+                  <AdminLayout />
+                </AdminRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="events" element={<AdminEvents />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="organizers" element={<AdminOrganizers />} />
+            </Route>
+            <Route
+              path="dashboard/*"
+              element={
+                <ProtectedRoute>
+                  <ParticipantLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<MyRegistrations />} />
+              <Route path="registrations" element={<MyRegistrations />} />
+              <Route path="events/:id" element={<ParticipantDashboard />} />
+              <Route path="certificates" element={<MyCertificates />} />
+              <Route path="media" element={<MyMedia />} />
+            </Route>
+            <Route
+              path="organizer/*"
+              element={
+                <OrganizerRoute>
+                  <OrganizerLayout />
+                </OrganizerRoute>
+              }
+            >
+              <Route index element={<OrganizerDashboard />} />
+              <Route path="events" element={<EventsManage />} />
+              <Route path="events/new" element={<EventEditor />} />
+              <Route path="events/:id/edit" element={<EventEditor />} />
+              <Route path="attendance" element={<AttendanceScan />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Box>
+        {!hideFooter && <Footer />}
       </Box>
-    </ThemeProvider>
+    </ColorModeProvider>
   );
 }
+
+
+
+
+
