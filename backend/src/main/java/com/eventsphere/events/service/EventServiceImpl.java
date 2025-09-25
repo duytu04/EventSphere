@@ -4,7 +4,6 @@
 package com.eventsphere.events.service;
 
 import com.eventsphere.core.exception.NotFoundException;
-import com.eventsphere.core.util.PagedResponse;
 import com.eventsphere.events.dto.EventCreateRequest;
 import com.eventsphere.events.dto.EventStatsResponse;
 import com.eventsphere.events.dto.EventUpdateRequest;
@@ -69,35 +68,37 @@ public Event create(EventCreateRequest req, Long organizerId) {
 public Event update(Long id, EventUpdateRequest req) {
   Event e = repo.findById(id)
       .orElseThrow(() -> new NotFoundException("Event not found: " + id));
-
-  if (!java.util.Objects.equals(e.getVersion(), req.version())) {
-    throw new org.springframework.web.server.ResponseStatusException(
-        org.springframework.http.HttpStatus.CONFLICT, "Version mismatch");
-  }
-
-  if (req.title() != null)        e.setTitle(req.title().trim());
-  if (req.description() != null)  e.setDescription(req.description());
-  if (req.mainImageUrl() != null) e.setMainImageUrl(req.mainImageUrl());
-  if (req.category() != null)     e.setCategory(req.category());
-  if (req.venue() != null)        e.setVenue(req.venue());
-  if (req.startTime() != null)    e.setStartTime(req.startTime());
-  if (req.endTime() != null)      e.setEndTime(req.endTime());
-
-  // Clamp totalSeats/seatsAvail an toàn (KHÔNG gọi req.seatsAvail())
-  int curTotal = e.getTotalSeats() != null ? e.getTotalSeats() : 0;
-  int curAvail = e.getSeatsAvail()  != null ? e.getSeatsAvail()  : curTotal;
-  int consumed = Math.max(0, curTotal - curAvail);
-
-  int newTotal = (req.totalSeats() != null) ? Math.max(0, req.totalSeats()) : curTotal;
-  int newAvail = Math.max(0, newTotal - consumed);
-  if (newAvail > newTotal) newAvail = newTotal;
-
-  e.setTotalSeats(newTotal);
-  e.setSeatsAvail(newAvail);
-
-  return e;
+  return applyUpdate(e, req);
 }
 
+  private Event applyUpdate(Event e, EventUpdateRequest req) {
+    if (!java.util.Objects.equals(e.getVersion(), req.version())) {
+      throw new org.springframework.web.server.ResponseStatusException(
+          org.springframework.http.HttpStatus.CONFLICT, "Version mismatch");
+    }
+
+    if (req.title() != null)        e.setTitle(req.title().trim());
+    if (req.description() != null)  e.setDescription(req.description());
+    if (req.mainImageUrl() != null) e.setMainImageUrl(req.mainImageUrl());
+    if (req.category() != null)     e.setCategory(req.category());
+    if (req.venue() != null)        e.setVenue(req.venue());
+    if (req.startTime() != null)    e.setStartTime(req.startTime());
+    if (req.endTime() != null)      e.setEndTime(req.endTime());
+
+    // Clamp totalSeats/seatsAvail an toàn (KHÔNG gọi req.seatsAvail())
+    int curTotal = e.getTotalSeats() != null ? e.getTotalSeats() : 0;
+    int curAvail = e.getSeatsAvail()  != null ? e.getSeatsAvail()  : curTotal;
+    int consumed = Math.max(0, curTotal - curAvail);
+
+    int newTotal = (req.totalSeats() != null) ? Math.max(0, req.totalSeats()) : curTotal;
+    int newAvail = Math.max(0, newTotal - consumed);
+    if (newAvail > newTotal) newAvail = newTotal;
+
+    e.setTotalSeats(newTotal);
+    e.setSeatsAvail(newAvail);
+
+    return e;
+  }
 
   @Override
   @Transactional
@@ -109,11 +110,7 @@ public Event update(Long id, EventUpdateRequest req) {
   @Override
   @Transactional
   public void submitForApproval(Long id, Long organizerId) {
-    Event e = repo.findById(id)
-        .orElseThrow(() -> new NotFoundException("Event not found: " + id));
-    if (organizerId != null && e.getOrganizerId() != null && !organizerId.equals(e.getOrganizerId())) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not owner");
-    }
+    Event e = requireOwned(id, organizerId);
     e.setStatus(ApprovalStatus.PENDING_APPROVAL.name());
   }
   // EventServiceImpl.java
@@ -158,9 +155,47 @@ public Event getAdminEventById(Long id) {
 
   @Override
   @Transactional(readOnly = true)
+  public Page<Event> searchByOrganizer(Long organizerId, String q, String status, int page, int size) {
+    if (organizerId == null) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Organizer required");
+    }
+
+    Pageable pageable = PageRequest.of(
+        Math.max(0, page),
+        Math.min(Math.max(1, size), 100),
+        Sort.by("startTime").descending()
+    );
+
+    String kw = (q == null || q.isBlank()) ? null : q.trim();
+    String st = (status == null || status.isBlank()) ? null : status.trim().toUpperCase();
+
+    return repo.searchByOrganizer(organizerId, kw, st, pageable);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Event getOwned(Long id, Long organizerId) {
+    return requireOwned(id, organizerId);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public Event get(Long id) {
     return repo.findById(id)
         .orElseThrow(() -> new NotFoundException("Event not found: " + id));
+  }
+
+  private Event requireOwned(Long id, Long organizerId) {
+    if (organizerId == null) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Organizer required");
+    }
+
+    Event e = repo.findById(id)
+        .orElseThrow(() -> new NotFoundException("Event not found: " + id));
+    if (!Objects.equals(e.getOrganizerId(), organizerId)) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not owner");
+    }
+    return e;
   }
 
   @Override
@@ -173,4 +208,15 @@ public Event getAdminEventById(Long id) {
     return new EventStatsResponse(total, approved, pending, rejected);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
 

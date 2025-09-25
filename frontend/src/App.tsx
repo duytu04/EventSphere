@@ -2,6 +2,7 @@ import { Box, CssBaseline } from "@mui/material";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import HomePage from "./pages/home/HomePage";
+import AboutPage from "./pages/about/AboutPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import ForbiddenPage from "./pages/ForbiddenPage";
@@ -29,6 +30,7 @@ import ColorModeProvider from "./theme/theme";
 import Header from "./components/common/Header";
 import Footer from "./components/common/Footer";
 
+
 export default function App() {
   const location = useLocation();
   const hideFooter = location.pathname.startsWith("/admin") || location.pathname.startsWith("/organizer") || location.pathname.startsWith("/dashboard");
@@ -41,6 +43,7 @@ export default function App() {
         <Box component="main" sx={{ flexGrow: 1 }}>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
             <Route path="forbidden" element={<ForbiddenPage />} />

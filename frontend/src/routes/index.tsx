@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router-dom";
 import PublicLayout from "../layout/PublicLayout";
 import AdminLayout from "../layout/AdminLayout";
 import HomePage from "../pages/home/HomePage";
+import AboutPage from "../pages/about/AboutPage";
+import EventsListPage from "../pages/events/EventsListPage";
 import LoginPage from "../pages/auth/LoginPage";
 import SignupPage from "../pages/auth/SignupPage";
 import ForbiddenPage from "../pages/ForbiddenPage";
@@ -14,6 +16,8 @@ export default function AppRoutes(){
     <Routes>
       <Route element={<PublicLayout/>}>
         <Route path="/" element={<HomePage/>}/>
+        <Route path="/about" element={<AboutPage/>}/>
+        <Route path="/events" element={<EventsListPage/>}/>
         <Route path="/login" element={<LoginPage/>}/>
         <Route path="/signup" element={<SignupPage/>}/>
         <Route path="/forbidden" element={<ForbiddenPage/>}/>

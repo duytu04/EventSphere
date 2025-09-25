@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
@@ -9,6 +9,8 @@ import {
   Chip,
   Divider,
   Grid,
+  Alert,
+  LinearProgress,
   Stack,
   TextField,
   Typography,
@@ -18,6 +20,13 @@ import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import PreviewRoundedIcon from "@mui/icons-material/PreviewRounded";
+import { useSnackbar } from "notistack";
+import {
+  createOrganizerEvent,
+  fetchOrganizerEventById,
+  updateOrganizerEvent,
+  EventResponse,
+} from "../../features/events/eventsApi";
 
 const CATEGORY_SUGGESTIONS = ["Công nghệ", "Kinh doanh", "Nghệ thuật", "Giáo dục", "Thể thao"];
 
@@ -26,24 +35,77 @@ export default function EventEditor() {
   const navigate = useNavigate();
   const theme = useTheme();
   const isEditing = Boolean(params.id && params.id !== "new");
+  const { enqueueSnackbar } = useSnackbar();
 
   const [form, setForm] = useState({
-    name: isEditing ? "Tech Innovators Summit" : "",
-    description: isEditing
-      ? "Sự kiện quy tụ cộng đồng đổi mới sáng tạo với các phiên thảo luận, workshop và khu trải nghiệm."
-      : "",
-    mainImageUrl: isEditing
-      ? "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200&auto=format&fit=crop"
-      : "",
-    category: CATEGORY_SUGGESTIONS[0],
-    location: "Trung tâm Hội nghị GEM",
-    startTime: "2025-10-01T08:00",
-    endTime: "2025-10-01T17:30",
-    capacity: 500,
+    name: "",
+    description: "",
+    mainImageUrl: "",
+    category: CATEGORY_SUGGESTIONS[0] ?? "",
+    location: "",
+    startTime: "",
+    endTime: "",
+    capacity: 0,
   });
-
+  const [eventVersion, setEventVersion] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
+
+  const toInputValue = (value?: string) => {
+    if (!value) return "";
+    try {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(
+        date.getMinutes()
+      )}`;
+    } catch {
+      return "";
+    }
+  };
+
+  useEffect(() => {
+    if (!isEditing || !params.id) return;
+    const eventId = Number(params.id);
+    if (Number.isNaN(eventId)) return;
+
+    let active = true;
+    setLoading(true);
+    setErrorMessage(null);
+
+    fetchOrganizerEventById(eventId)
+      .then((data: EventResponse) => {
+        if (!active) return;
+        setForm({
+          name: data.name ?? "",
+          description: data.description ?? "",
+          mainImageUrl: data.mainImageUrl ?? "",
+          category: data.category ?? CATEGORY_SUGGESTIONS[0] ?? "",
+          location: data.location ?? "",
+          startTime: toInputValue(data.startTime),
+          endTime: toInputValue(data.endTime),
+          capacity: data.capacity ?? 0,
+        });
+        setEventVersion(data.version ?? null);
+      })
+      .catch((err: any) => {
+        if (!active) return;
+        console.error(err);
+        setErrorMessage(err?.message ?? "Không thể tải thông tin sự kiện");
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isEditing, params.id]);
 
   const pageTitle = useMemo(
     () => (isEditing ? `Chỉnh sửa sự kiện ${params.id}` : "Tạo sự kiện mới"),
@@ -74,16 +136,64 @@ export default function EventEditor() {
     }
   }, [form.startTime, form.endTime]);
 
+  const isBusy = saving || loading;
+
   const handleChange = (key: keyof typeof form, value: any) => {
+    setErrorMessage(null);
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = () => {
-    setSaving(true);
-    window.setTimeout(() => {
-      setSaving(false);
+  const handleSubmit = async () => {
+    if (saving || loading) return;
+
+    if (!form.name.trim()) {
+      setErrorMessage("Tên sự kiện không được bỏ trống");
+      return;
+    }
+
+    if (!form.startTime || !form.endTime) {
+      setErrorMessage("Vui lòng chọn thời gian bắt đầu và kết thúc");
+      return;
+    }
+
+    const payload = {
+      name: form.name.trim(),
+      description: form.description?.trim() || undefined,
+      category: form.category?.trim() || undefined,
+      location: form.location?.trim() || undefined,
+      startTime: form.startTime,
+      endTime: form.endTime,
+      capacity: Number.isNaN(form.capacity) ? 0 : Number(form.capacity),
+      mainImageUrl: form.mainImageUrl?.trim() || undefined,
+    };
+
+    try {
+      setErrorMessage(null);
+      setSaving(true);
+
+      if (isEditing && params.id) {
+        const eventId = Number(params.id);
+        if (Number.isNaN(eventId)) {
+          throw new Error("ID sự kiện không hợp lệ");
+        }
+        await updateOrganizerEvent(eventId, {
+          ...payload,
+          version: eventVersion ?? undefined,
+        });
+        enqueueSnackbar("Cập nhật sự kiện thành công", { variant: "success" });
+      } else {
+        await createOrganizerEvent(payload);
+        enqueueSnackbar("Tạo sự kiện thành công", { variant: "success" });
+      }
+
       navigate("/organizer/events", { replace: true });
-    }, 1200);
+    } catch (err: any) {
+      console.error(err);
+      const message = err?.response?.data?.message ?? err?.message ?? "Không thể lưu sự kiện";
+      setErrorMessage(message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const scrollToPreview = () => {
@@ -95,6 +205,13 @@ export default function EventEditor() {
       <Button onClick={() => navigate(-1)} startIcon={<ArrowBackRoundedIcon />} sx={{ alignSelf: "flex-start" }}>
         Quay lại
       </Button>
+
+      {loading ? <LinearProgress sx={{ borderRadius: 2 }} /> : null}
+      {errorMessage ? (
+        <Alert severity="error" sx={{ borderRadius: 2 }}>
+          {errorMessage}
+        </Alert>
+      ) : null}
 
       <Card sx={{ borderRadius: 3 }}>
         <CardHeader
@@ -120,6 +237,7 @@ export default function EventEditor() {
                   placeholder="Ví dụ: Tech Innovators Summit"
                   required
                   fullWidth
+                  disabled={isBusy}
                 />
 
                 <TextField
@@ -129,16 +247,18 @@ export default function EventEditor() {
                   value={form.description}
                   onChange={(e) => handleChange("description", e.target.value)}
                   placeholder="Chia sẻ điểm nổi bật, agenda và thông tin khách mời"
+                  disabled={isBusy}
                 />
 
                 <Stack spacing={1.5}>
                   <TextField
                     label="Ảnh đại diện (URL)"
                     placeholder="https://..."
-                    value={form.mainImageUrl}
-                    onChange={(e) => handleChange("mainImageUrl", e.target.value)}
-                    fullWidth
-                  />
+                  value={form.mainImageUrl}
+                  onChange={(e) => handleChange("mainImageUrl", e.target.value)}
+                  fullWidth
+                  disabled={isBusy}
+                />
                   {form.mainImageUrl?.trim() ? (
                     <Box
                       component="img"
@@ -168,6 +288,7 @@ export default function EventEditor() {
                       onChange={(e) => handleChange("startTime", e.target.value)}
                       InputLabelProps={{ shrink: true }}
                       fullWidth
+                      disabled={isBusy}
                     />
                     <TextField
                       label="Kết thúc"
@@ -176,6 +297,7 @@ export default function EventEditor() {
                       onChange={(e) => handleChange("endTime", e.target.value)}
                       InputLabelProps={{ shrink: true }}
                       fullWidth
+                      disabled={isBusy}
                     />
                   </Stack>
                 </Stack>
@@ -191,6 +313,7 @@ export default function EventEditor() {
                     onChange={(e) => handleChange("capacity", Number(e.target.value))}
                     inputProps={{ min: 0 }}
                     fullWidth
+                    disabled={isBusy}
                   />
                 </Stack>
               </Stack>
@@ -204,6 +327,7 @@ export default function EventEditor() {
                   onChange={(e) => handleChange("category", e.target.value)}
                   helperText={`Gợi ý: ${CATEGORY_SUGGESTIONS.join(", ")}`}
                   fullWidth
+                  disabled={isBusy}
                 />
 
                 <TextField
@@ -212,6 +336,7 @@ export default function EventEditor() {
                   onChange={(e) => handleChange("location", e.target.value)}
                   placeholder="Nhập địa điểm tổ chức"
                   fullWidth
+                  disabled={isBusy}
                 />
 
                 <Stack spacing={1.5}>
@@ -220,10 +345,10 @@ export default function EventEditor() {
                     startIcon={<SaveRoundedIcon />}
                     size="large"
                     onClick={handleSubmit}
-                    disabled={saving}
+                    disabled={isBusy}
                     sx={{ borderRadius: 2 }}
                   >
-                    {saving ? "Đang lưu..." : "Lưu sự kiện"}
+                    {saving ? "Đang lưu..." : loading ? "Đang tải..." : "Lưu sự kiện"}
                   </Button>
                   <Button
                     variant="outlined"

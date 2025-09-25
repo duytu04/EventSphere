@@ -16,6 +16,9 @@ public interface EventService {
   void reject(Long id);
 
   Page<Event> search(String q, String status, int page, int size);
+  Page<Event> searchByOrganizer(Long organizerId, String q, String status, int page, int size);
+  Event getOwned(Long id, Long organizerId);
+  Event updateForOrganizer(Long id, EventUpdateRequest req, Long organizerId);
   Event get(Long id);
 
   // --- thêm để giữ tên cũ ---
@@ -23,3 +26,6 @@ public interface EventService {
 
   EventStatsResponse stats();
 }
+
+
+

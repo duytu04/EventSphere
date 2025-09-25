@@ -23,5 +23,21 @@ public interface EventRepository extends JpaRepository<Event, Long> {
   long countByStatus(String status);
 
   List<Event> findTop5ByStatusOrderByStartTimeAsc(String status);
+
+  @Query("""
+    SELECT e FROM Event e
+    WHERE e.organizerId = :organizerId
+      AND (
+        :q IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%',:q,'%'))
+        OR LOWER(e.category) LIKE LOWER(CONCAT('%',:q,'%'))
+        OR LOWER(e.venue) LIKE LOWER(CONCAT('%',:q,'%'))
+      )
+      AND (:status IS NULL OR e.status = :status)
+  """)
+  Page<Event> searchByOrganizer(@Param("organizerId") Long organizerId,
+                                @Param("q") String q,
+                                @Param("status") String status,
+                                Pageable pageable);
 }
+
 

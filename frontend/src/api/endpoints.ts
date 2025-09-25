@@ -25,6 +25,7 @@ export const ENDPOINTS = {
   public: {
     events: `${API_BASE}/api/events`,
     event:  (id: number | string) => `${API_BASE}/api/events/${id}`,
+    reviews: (id: number | string) => `${API_BASE}/api/events/${id}/reviews`,
   },
 
   // 🟣 ORGANIZER (quản lý sự kiện của organizer)

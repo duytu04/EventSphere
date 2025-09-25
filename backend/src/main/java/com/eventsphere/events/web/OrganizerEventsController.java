@@ -1,54 +1,87 @@
-
-
 package com.eventsphere.events.web;
 
+import com.eventsphere.core.util.PagedResponse;
 import com.eventsphere.events.dto.EventCreateRequest;
 import com.eventsphere.events.dto.EventResponse;
-import com.eventsphere.security.AuthFacade;
+import com.eventsphere.events.dto.EventUpdateRequest;
 import com.eventsphere.events.model.Event;
 import com.eventsphere.events.service.EventService;
+import com.eventsphere.security.AuthFacade;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 
 /**
  * Controller cho ORGANIZER (người tổ chức sự kiện).
- * Cho phép organizer tạo sự kiện và gửi yêu cầu duyệt.
+ * Cho phép organizer quản lý sự kiện của mình: xem danh sách, chi tiết, tạo, chỉnh sửa và gửi duyệt.
  */
 @RestController
-@RequestMapping("/api/organizer/events")       // Base URL cho organizer
-@PreAuthorize("hasRole('ORGANIZER')")         // Chỉ role ORGANIZER mới gọi được API này
+@RequestMapping("/api/organizer/events")
+@PreAuthorize("hasRole('ORGANIZER')")
 public class OrganizerEventsController {
 
-  private final EventService svc;  // Service xử lý nghiệp vụ sự kiện
-  private final AuthFacade auth;   // Lấy thông tin user hiện tại từ security context
+  private final EventService svc;
+  private final AuthFacade auth;
 
-  // Constructor injection
-  public OrganizerEventsController(EventService s, AuthFacade a){
+  public OrganizerEventsController(EventService s, AuthFacade a) {
     this.svc = s;
     this.auth = a;
   }
 
   /**
+   * API: GET /api/organizer/events
+   * Organizer xem danh sách sự kiện của chính mình (hỗ trợ tìm kiếm & phân trang).
+   */
+  @GetMapping
+  public PagedResponse<EventResponse> list(
+      @RequestParam(required = false) String q,
+      @RequestParam(required = false) String status,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    Long organizerId = auth.currentUserId();
+    var mapped = svc.searchByOrganizer(organizerId, q, status, page, size)
+        .map(OrganizerEventsController::toDto);
+    return PagedResponse.from(mapped);
+  }
+
+  /**
+   * API: GET /api/organizer/events/{id}
+   * Organizer xem chi tiết sự kiện thuộc sở hữu của mình.
+   */
+  @GetMapping("/{id}")
+  public EventResponse detail(@PathVariable Long id) {
+    var e = svc.getOwned(id, auth.currentUserId());
+    return toDto(e);
+  }
+
+  /**
    * API: POST /api/organizer/events
    * Organizer tạo sự kiện mới.
-   * - organizerId lấy từ AuthFacade (user hiện tại).
-   * - Trả về EventResponse chứa dữ liệu sự kiện vừa tạo.
    */
   @PostMapping
-  public EventResponse create(@Valid @RequestBody EventCreateRequest req){
-    Long organizerId = auth.currentUserId();   // Lấy id organizer hiện tại
-    var e = svc.create(req, organizerId);      // Gọi service tạo sự kiện
-    return toDto(e);                           // Chuẩn thứ tự + đủ mainImageUrl
+  public EventResponse create(@Valid @RequestBody EventCreateRequest req) {
+    Long organizerId = auth.currentUserId();
+    var e = svc.create(req, organizerId);
+    return toDto(e);
+  }
+
+  /**
+   * API: PUT /api/organizer/events/{id}
+   * Organizer cập nhật sự kiện của mình.
+   */
+  @PutMapping("/{id}")
+  public EventResponse update(@PathVariable Long id, @Valid @RequestBody EventUpdateRequest req) {
+    var e = svc.updateForOrganizer(id, req, auth.currentUserId());
+    return toDto(e);
   }
 
   /**
    * API: POST /api/organizer/events/{id}/submit
    * Organizer gửi sự kiện lên để Admin duyệt (status -> PENDING_APPROVAL).
-   * - Yêu cầu organizer phải là owner của event.
    */
   @PostMapping("/{id}/submit")
-  public void submit(@PathVariable Long id){
+  public void submit(@PathVariable Long id) {
     svc.submitForApproval(id, auth.currentUserId());
   }
 
@@ -63,16 +96,16 @@ public class OrganizerEventsController {
     int available = e.getSeatsAvail() != null ? e.getSeatsAvail() : total;
     long attendeesCount = Math.max(0, total - available);
     return new EventResponse(
-        e.getEventId(),        // id
-        e.getTitle(),          // name
+        e.getEventId(),
+        e.getTitle(),
         e.getDescription(),
         e.getCategory(),
-        e.getVenue(),          // location
-        e.getMainImageUrl(),   // mainImageUrl (vị trí 6)
+        e.getVenue(),
+        e.getMainImageUrl(),
         e.getStartTime(),
         e.getEndTime(),
-        e.getSeatsAvail(),     // seatsAvailable
-        e.getTotalSeats(),     // capacity
+        e.getSeatsAvail(),
+        e.getTotalSeats(),
         e.getStatus(),
         e.getVersion(),
         attendeesCount

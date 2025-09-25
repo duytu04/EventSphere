@@ -19,6 +19,7 @@ export type EventResponse = {
   capacity?: number;        // map từ totalSeats
   status?: string;          // APPROVED | PENDING_APPROVAL | REJECTED | ...
   version?: number;
+  attendeesCount?: number;
 };
 
 export type PagedResponse<T> = {
@@ -43,6 +44,22 @@ export type EventCreatePayload = {
 export type EventUpdatePayload = Partial<EventCreatePayload> & {
   id?: number;
   version?: number;
+};
+
+/* ================== Reviews / Ratings ================== */
+export type EventReview = {
+  id: number;
+  userId: number;
+  userName: string;
+  userAvatarUrl?: string;
+  rating: number; // 1..5
+  comment: string;
+  createdAt: string; // ISO
+};
+
+export type EventReviewCreatePayload = {
+  rating: number; // 1..5
+  comment: string;
 };
 
 /* ================== URL helpers (có fallback) ================== */
@@ -81,6 +98,7 @@ const mapDto = (e: any): EventResponse => ({
   capacity: e?.capacity ?? e?.totalSeats,
   status: e?.status ?? e?.approvalStatus,
   version: e?.version,
+  attendeesCount: e?.attendeesCount,
 });
 
 const normalizePage = (data: any): PagedResponse<EventResponse> => {
@@ -191,5 +209,30 @@ export async function deleteOrganizerEvent(id: number) {
   await api.delete(organizerEventUrl(id));
 }
 
+/* ================== REVIEWS (PUBLIC + AUTH) ================== */
+export async function fetchEventReviews(eventId: number) {
+  const { data } = await api.get((ENDPOINTS.public as any).reviews(eventId));
+  const list: any[] = Array.isArray(data) ? data : data?.content ?? [];
+  return list.map((r) => ({
+    id: r?.id ?? r?.reviewId ?? 0,
+    userId: r?.userId ?? r?.authorId ?? 0,
+    userName: r?.userName ?? r?.authorName ?? "Người dùng",
+    userAvatarUrl: r?.userAvatarUrl,
+    rating: Math.max(1, Math.min(5, Number(r?.rating ?? 0))) || 5,
+    comment: String(r?.comment ?? "").trim(),
+    createdAt: r?.createdAt ?? r?.created_at ?? new Date().toISOString(),
+  })) as EventReview[];
+}
 
-
+export async function createEventReview(eventId: number, payload: EventReviewCreatePayload) {
+  const { data } = await api.post((ENDPOINTS.public as any).reviews(eventId), payload);
+  return {
+    id: data?.id ?? 0,
+    userId: data?.userId ?? 0,
+    userName: data?.userName ?? "Bạn",
+    userAvatarUrl: data?.userAvatarUrl,
+    rating: Math.max(1, Math.min(5, Number(data?.rating ?? payload.rating))) || payload.rating,
+    comment: String(data?.comment ?? payload.comment).trim(),
+    createdAt: data?.createdAt ?? new Date().toISOString(),
+  } as EventReview;
+}

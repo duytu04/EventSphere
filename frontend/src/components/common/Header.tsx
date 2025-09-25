@@ -57,6 +57,7 @@ export default function Header() {
     const base = [
       { label: "Trang chủ", to: "/" },
       { label: "Sự kiện", to: "/events" },
+      { label: "Về chúng tôi", to: "/about" },
     ];
 
     if (token) {
@@ -401,6 +402,42 @@ export default function Header() {
                             Tạo tài khoản mới
                           </Button>
                         </Stack>
+                        
+                        {/* Mobile Navigation Links */}
+                        {isSmall && (
+                          <>
+                            <Divider sx={{ my: 1 }} />
+                            <Stack spacing={1}>
+                              {navLinks.map((link) => {
+                                const active = location.pathname === link.to || (link.to !== "/" && location.pathname.startsWith(link.to));
+                                return (
+                                  <Button
+                                    key={link.to}
+                                    component={Link}
+                                    to={link.to}
+                                    onClick={handlePopoverClose}
+                                    size="medium"
+                                    sx={{
+                                      justifyContent: "flex-start",
+                                      borderRadius: 1.5,
+                                      px: 1.5,
+                                      py: 1,
+                                      color: active ? "primary.main" : "text.primary",
+                                      backgroundColor: active ? alpha(theme.palette.primary.main, 0.08) : "transparent",
+                                      '&:hover': {
+                                        backgroundColor: active
+                                          ? alpha(theme.palette.primary.main, 0.12)
+                                          : alpha(theme.palette.primary.main, 0.08),
+                                      },
+                                    }}
+                                  >
+                                    {link.label}
+                                  </Button>
+                                );
+                              })}
+                            </Stack>
+                          </>
+                        )}
                       </Stack>
                     </Box>
                   )}

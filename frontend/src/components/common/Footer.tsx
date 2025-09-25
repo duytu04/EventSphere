@@ -25,6 +25,7 @@ import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 const quickLinks = [
   { label: "Trang chủ", href: "/" },
   { label: "Sự kiện", href: "/events" },
+  { label: "Về chúng tôi", href: "/about" },
   { label: "Đăng nhập", href: "/login" },
   { label: "Đăng ký", href: "/signup" },
 ];
@@ -128,7 +129,7 @@ export default function Footer() {
               <Stack spacing={1}>
                 <Stack direction="row" spacing={1} alignItems="center" color="text.secondary">
                   <EmailRoundedIcon fontSize="small" />
-                  <Typography variant="body2">hello@eventsphere.com</Typography>
+                  <Typography variant="body2">tmtd@eventsphere.com</Typography>
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center" color="text.secondary">
                   <PhoneRoundedIcon fontSize="small" />
@@ -136,7 +137,7 @@ export default function Footer() {
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center" color="text.secondary">
                   <LocationOnRoundedIcon fontSize="small" />
-                  <Typography variant="body2">Quận 1, TP. Hồ Chí Minh</Typography>
+                  <Typography variant="body2">FPT APTECH, HÀ NỘI</Typography>
                 </Stack>
               </Stack>
             </Stack>
