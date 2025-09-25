@@ -26,6 +26,26 @@ export const ENDPOINTS = {
     events: `${API_BASE}/api/events`,
     event:  (id: number | string) => `${API_BASE}/api/events/${id}`,
     reviews: (id: number | string) => `${API_BASE}/api/events/${id}/reviews`,
+    recentReviews: (limit: number = 10) => `${API_BASE}/api/feedback/recent?limit=${limit}`,
+  },
+
+  // 🔵 FEEDBACK (đánh giá và bình luận)
+  feedback: {
+    create: `${API_BASE}/api/feedback`,
+    avg: (id: number | string) => `${API_BASE}/api/public/feedback/avg?eventId=${id}`,
+  },
+
+  // 🎫 REGISTRATIONS (đăng ký sự kiện)
+  registrations: {
+    myRegistrations: `${API_BASE}/api/me/registrations`,
+    generateQR: (id: number | string) => `${API_BASE}/api/me/registrations/${id}/qr`,
+    markAttendance: (id: number | string) => `${API_BASE}/api/me/registrations/${id}/attendance`,
+  },
+
+  // 🏆 CERTIFICATES (chứng nhận)
+  certificates: {
+    myCertificates: `${API_BASE}/api/me/certificates`,
+    certificate: (id: number | string) => `${API_BASE}/api/me/certificates/${id}`,
   },
 
   // 🟣 ORGANIZER (quản lý sự kiện của organizer)
@@ -34,6 +54,8 @@ export const ENDPOINTS = {
     event:  (id: number | string) => `${API_BASE}/api/organizer/events/${id}`,
     attendanceMark: `${API_BASE}/api/organizer/attendance/mark`,
     certificatesIssue: `${API_BASE}/api/organizer/certificates/issue`,
+    attendanceLogs: (eventId: number | string, page: number = 0, size: number = 20) =>
+      `${API_BASE}/api/organizer/attendance/logs?eventId=${eventId}&page=${page}&size=${size}`,
   },
 
   // 🟥 ADMIN (duyệt sự kiện, quản trị user, analytics)

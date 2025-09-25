@@ -1,14 +1,3 @@
-// GET /api/admin/users?q=&role=&page=&size=
-
-// POST /api/admin/users (tạo)
-
-// PUT /api/admin/users/{id} (sửa)
-
-// DELETE /api/admin/users/{id} (xóa)
-
-// POST /api/admin/users/{id}/enable?enabled=true|false
-
-// POST /api/admin/users/{id}/roles (body: { userId, roles: [] })
 
 
 

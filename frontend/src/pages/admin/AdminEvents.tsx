@@ -34,6 +34,9 @@ import EditIcon from "@mui/icons-material/Edit";
 import AdminEventDetailDrawer from "./AdminEventDetailDrawer";
 import { useSnackbar } from "notistack";
 import EmptyState from "../../components/common/EmptyState";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import DOMPurify from "dompurify";
 
 const toLocalInputValue = (d: Date) => {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -247,12 +250,35 @@ export default function AdminEvents() {
                 inputRef={nameInputRef}
                 required
               />
-              <TextField
-                label="Description"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                multiline
-              />
+              <Stack gap={1}>
+                <Typography variant="subtitle2">Description</Typography>
+                <ReactQuill
+                  theme="snow"
+                  value={form.description}
+                  onChange={(html) => setForm({ ...form, description: html })}
+                  placeholder="Soạn nội dung sự kiện với đầy đủ định dạng..."
+                  modules={{
+                    toolbar: [
+                      [{ header: [1, 2, 3, false] }],
+                      ["bold", "italic", "underline", "strike"],
+                      [{ list: "ordered" }, { list: "bullet" }],
+                      ["blockquote", "code-block"],
+                      ["link", "image"],
+                      [{ align: [] }],
+                      ["clean"],
+                    ],
+                  }}
+                />
+                {form.description?.trim() && (
+                  <Box sx={{ p: 1.25, borderRadius: 1, bgcolor: "action.hover" }}>
+                    <Typography variant="caption" color="text.secondary">Preview</Typography>
+                    <Box
+                      sx={{ '& img': { maxWidth: '100%', borderRadius: 1 }, '& ul, & ol': { pl: 3 } }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(form.description) }}
+                    />
+                  </Box>
+                )}
+              </Stack>
               <TextField
                 label="Main image URL"
                 placeholder="https://..."

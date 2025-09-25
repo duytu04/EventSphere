@@ -15,6 +15,9 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import DOMPurify from "dompurify";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import { alpha, useTheme } from "@mui/material/styles";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
@@ -240,15 +243,27 @@ export default function EventEditor() {
                   disabled={isBusy}
                 />
 
-                <TextField
-                  label="Mô tả"
-                  multiline
-                  minRows={5}
-                  value={form.description}
-                  onChange={(e) => handleChange("description", e.target.value)}
-                  placeholder="Chia sẻ điểm nổi bật, agenda và thông tin khách mời"
-                  disabled={isBusy}
-                />
+                <Stack spacing={1}>
+                  <Typography variant="subtitle1" fontWeight={600}>Mô tả chi tiết</Typography>
+                  <ReactQuill
+                    theme="snow"
+                    value={form.description}
+                    onChange={(html) => handleChange("description", html)}
+                    readOnly={isBusy}
+                    placeholder="Soạn nội dung sự kiện với đầy đủ định dạng..."
+                    modules={{
+                      toolbar: [
+                        [{ header: [1, 2, 3, false] }],
+                        ["bold", "italic", "underline", "strike"],
+                        [{ list: "ordered" }, { list: "bullet" }],
+                        ["blockquote", "code-block"],
+                        ["link", "image"],
+                        [{ align: [] }],
+                        ["clean"],
+                      ],
+                    }}
+                  />
+                </Stack>
 
                 <Stack spacing={1.5}>
                   <TextField
@@ -418,9 +433,13 @@ export default function EventEditor() {
                         </Typography>
                       </Stack>
                       {form.description ? (
-                        <Typography variant="body2" color="text.secondary">
-                          {form.description}
-                        </Typography>
+                        <Box
+                          sx={{
+                            '& img': { maxWidth: '100%', borderRadius: 1 },
+                            '& ul, & ol': { pl: 3 },
+                          }}
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(form.description) }}
+                        />
                       ) : (
                         <Typography variant="body2" color="text.secondary">
                           Thêm mô tả để người tham dự hiểu rõ nội dung sự kiện.

@@ -41,6 +41,7 @@ import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import { alpha, lighten, darken } from "@mui/material/styles";
+import DOMPurify from "dompurify";
 import SeatsChip from "../../components/events/SeatsChip";
 import { useAuth } from "../../features/auth/useAuth";
 import {
@@ -51,6 +52,7 @@ import {
   createEventReview,
   type EventReview,
 } from "../../features/events/eventsApi";
+import api from "../../api/axiosClient";
 
 // Types
 
@@ -183,6 +185,54 @@ export default function EventDetailPage() {
   const [myRating, setMyRating] = useState<number | null>(null);
   const [myComment, setMyComment] = useState<string>("");
   const [submitLoading, setSubmitLoading] = useState<boolean>(false);
+  const [myRegistration, setMyRegistration] = useState<any>(null);
+  const [registrationLoading, setRegistrationLoading] = useState<boolean>(false);
+
+  // Registration functions
+  const fetchMyRegistration = async () => {
+    if (!token || !eventId) return;
+    try {
+      const { data } = await api.get(`/api/me/registrations`);
+      const myReg = data.find((reg: any) => reg.eventId === eventId);
+      setMyRegistration(myReg || null);
+    } catch (error) {
+      console.error("Failed to fetch registration:", error);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!event || !token) return;
+    setRegistrationLoading(true);
+    try {
+      const { data } = await api.post(`/api/events/${event.id}/register`);
+      setMyRegistration(data);
+      // Show success message
+      alert("Đăng ký thành công!");
+    } catch (error: any) {
+      console.error("Registration failed:", error);
+      alert(error?.response?.data?.message || "Đăng ký thất bại");
+    } finally {
+      setRegistrationLoading(false);
+    }
+  };
+
+  const handleCancelRegistration = async () => {
+    if (!myRegistration) return;
+    const confirmed = window.confirm("Bạn có chắc muốn huỷ đăng ký?");
+    if (!confirmed) return;
+    
+    setRegistrationLoading(true);
+    try {
+      await api.delete(`/api/me/registrations/${myRegistration.id}`);
+      setMyRegistration(null);
+      alert("Đã huỷ đăng ký thành công!");
+    } catch (error: any) {
+      console.error("Cancel registration failed:", error);
+      alert(error?.response?.data?.message || "Huỷ đăng ký thất bại");
+    } finally {
+      setRegistrationLoading(false);
+    }
+  };
 
   // Fetch event (public first, fallback admin)
   useEffect(() => {
@@ -294,6 +344,13 @@ export default function EventDetailPage() {
     };
   }, [eventId]);
 
+  // Fetch my registration when token is available
+  useEffect(() => {
+    if (token && eventId) {
+      fetchMyRegistration();
+    }
+  }, [token, eventId]);
+
   const averageRating = useMemo(() => {
     if (!reviews.length) return 0;
     const sum = reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
@@ -325,9 +382,11 @@ export default function EventDetailPage() {
   const heroTicketLabel = countdown ?? dateRange;
   const registrationCtaLabel = eventEnded
     ? "Sự kiện đã kết thúc"
-    : token
-    ? "Nhận vé điện tử"
-    : "Đăng nhập để đăng ký";
+    : !token
+    ? "Đăng nhập để đăng ký"
+    : myRegistration
+    ? "Đã đăng ký"
+    : "Đăng ký tham gia";
 
   const heroHasImage = Boolean(event?.mainImageUrl);
   const headerOffset = {
@@ -779,9 +838,23 @@ export default function EventDetailPage() {
                     <Stack spacing={3}>
                       <Stack spacing={2}>
                         <Typography variant="h5" fontWeight={700}>Tổng quan sự kiện</Typography>
-                        <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
-                          {event.description?.trim() || "Thông tin chi tiết sẽ được cập nhật sớm."}
-                        </Typography>
+                        {event.description ? (
+                          <Box
+                            sx={{
+                              color: 'text.secondary',
+                              lineHeight: 1.7,
+                              '& img': { maxWidth: '100%', borderRadius: 1 },
+                              '& ul, & ol': { pl: 3 },
+                              '& blockquote': { pl: 2, borderLeft: (t) => `3px solid ${alpha(t.palette.text.primary, 0.2)}` },
+                              '& h1, & h2, & h3': { mt: 1.25 },
+                            }}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(event.description) }}
+                          />
+                        ) : (
+                          <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                            Thông tin chi tiết sẽ được cập nhật sớm.
+                          </Typography>
+                        )}
                       </Stack>
                     </Stack>
                   ) : null}
@@ -958,23 +1031,37 @@ export default function EventDetailPage() {
                         </Stack>
                       </Stack>
 
-                      <Button
-                        variant="contained"
-                        size="large"
-                        fullWidth
-                        disabled={eventEnded}
-                        onClick={() => {
-                          if (!event || eventEnded) return;
-                          if (!token) {
-                            navigate("/login", { state: { redirectTo: "/events/" + event.id } });
-                            return;
-                          }
-                          navigate("/events/" + event.id + "?intent=register");
-                        }}
-                        sx={{ borderRadius: 3, fontWeight: 600, py: 1.4, boxShadow: "0 18px 38px rgba(91,124,250,0.35)", opacity: eventEnded ? 0.7 : 1 }}
-                      >
-                        {registrationCtaLabel}
-                      </Button>
+                      <Stack direction="row" spacing={1}>
+                        <Button
+                          variant="contained"
+                          size="large"
+                          fullWidth
+                          disabled={eventEnded || registrationLoading || myRegistration}
+                          onClick={() => {
+                            if (!event || eventEnded || myRegistration) return;
+                            if (!token) {
+                              navigate("/login", { state: { redirectTo: "/events/" + event.id } });
+                              return;
+                            }
+                            handleRegister();
+                          }}
+                          sx={{ borderRadius: 3, fontWeight: 600, py: 1.4, boxShadow: "0 18px 38px rgba(91,124,250,0.35)", opacity: eventEnded || myRegistration ? 0.7 : 1 }}
+                        >
+                          {registrationLoading ? "Đang đăng ký..." : registrationCtaLabel}
+                        </Button>
+                        {myRegistration && (
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            size="large"
+                            disabled={registrationLoading}
+                            onClick={handleCancelRegistration}
+                            sx={{ borderRadius: 3, fontWeight: 600, py: 1.4 }}
+                          >
+                            {registrationLoading ? "Đang huỷ..." : "Huỷ đăng ký"}
+                          </Button>
+                        )}
+                      </Stack>
                     </Stack>
                   ) : null}
                 </CardContent>

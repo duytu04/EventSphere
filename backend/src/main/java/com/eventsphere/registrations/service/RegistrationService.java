@@ -1,17 +1,14 @@
 package com.eventsphere.registrations.service;
 
 import com.eventsphere.registrations.dto.RegistrationResponse;
+import com.eventsphere.registrations.dto.AttendanceResponse;
+import com.eventsphere.registrations.dto.QrCodeResponse;
+
 import java.util.List;
 
 public interface RegistrationService {
-
-  RegistrationResponse register(Long eventId, Long userId);
-
-  List<RegistrationResponse> listForUser(Long userId);
-
-  List<RegistrationResponse> listForEvent(Long eventId);
-
-  void cancel(Long registrationId, Long userId);
-
-  byte[] exportCsv(Long eventId);
+    List<RegistrationResponse> getMyRegistrations(Long userId);
+    QrCodeResponse generateQRCode(Long userId, Long registrationId);
+    AttendanceResponse markAttendance(Long userId, Long registrationId);
+    void cancelRegistration(Long userId, Long registrationId);
 }

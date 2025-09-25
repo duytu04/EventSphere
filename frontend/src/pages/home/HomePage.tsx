@@ -41,6 +41,7 @@ import { motion } from "framer-motion";
 import { ColorModeCtx } from "../../theme/theme";
 import { fetchPublicEvents, EventResponse } from "../../features/events/eventsApi";
 import EventCard from "../../components/events/EventCard";
+import RecentFeedback from "../../components/common/RecentFeedback";
 
 /* ================= Motion presets ================= */
 const fadeUp = {
@@ -478,6 +479,11 @@ export default function HomePage() {
             </Grid>
           ))}
         </Grid>
+      </Container>
+
+      {/* ======== RECENT FEEDBACK ======== */}
+      <Container maxWidth="lg" sx={{ pb: { xs: 10, md: 14 } }}>
+        <RecentFeedback limit={6} />
       </Container>
 
       {/* CTA BOTTOM */}

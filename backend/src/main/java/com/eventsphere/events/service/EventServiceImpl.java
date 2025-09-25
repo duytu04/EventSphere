@@ -179,6 +179,13 @@ public Event getAdminEventById(Long id) {
   }
 
   @Override
+  @Transactional
+  public Event updateForOrganizer(Long id, EventUpdateRequest req, Long organizerId) {
+    Event e = requireOwned(id, organizerId);
+    return applyUpdate(e, req);
+  }
+
+  @Override
   @Transactional(readOnly = true)
   public Event get(Long id) {
     return repo.findById(id)

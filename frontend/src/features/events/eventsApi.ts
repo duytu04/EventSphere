@@ -225,7 +225,11 @@ export async function fetchEventReviews(eventId: number) {
 }
 
 export async function createEventReview(eventId: number, payload: EventReviewCreatePayload) {
-  const { data } = await api.post((ENDPOINTS.public as any).reviews(eventId), payload);
+  const { data } = await api.post(ENDPOINTS.feedback.create, {
+    eventId: eventId,
+    rating: payload.rating,
+    comment: payload.comment
+  });
   return {
     id: data?.id ?? 0,
     userId: data?.userId ?? 0,
@@ -235,4 +239,28 @@ export async function createEventReview(eventId: number, payload: EventReviewCre
     comment: String(data?.comment ?? payload.comment).trim(),
     createdAt: data?.createdAt ?? new Date().toISOString(),
   } as EventReview;
+}
+
+export type RecentReviewItem = {
+  id: number;
+  userId: number;
+  eventId: number;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  eventName?: string; // sẽ được thêm từ frontend nếu cần
+};
+
+export async function fetchRecentReviews(limit: number = 10) {
+  const { data } = await api.get((ENDPOINTS.public as any).recentReviews(limit));
+  const list: any[] = Array.isArray(data) ? data : data?.content ?? [];
+  return list.map((r) => ({
+    id: r?.id ?? 0,
+    userId: r?.userId ?? 0,
+    eventId: r?.eventId ?? 0,
+    rating: Math.max(1, Math.min(5, Number(r?.rating ?? 0))) || 5,
+    comment: String(r?.comment ?? "").trim(),
+    createdAt: r?.createdAt ?? new Date().toISOString(),
+    eventName: "Sự kiện", // placeholder, có thể fetch thêm nếu cần
+  })) as RecentReviewItem[];
 }

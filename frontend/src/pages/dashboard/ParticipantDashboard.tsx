@@ -75,8 +75,8 @@ async function fetchMyRegistrationForEvent(eventId: number): Promise<MyRegistrat
 }
 
 async function createRegistration(eventId: number): Promise<MyRegistration> {
-  // Chuẩn khuyến nghị: POST /api/registrations { eventId }
-  const { data } = await api.post(`/api/registrations`, { eventId });
+  // Backend endpoint: POST /api/events/{eventId}/register
+  const { data } = await api.post(`/api/events/${eventId}/register`);
   return data as MyRegistration;
 }
 

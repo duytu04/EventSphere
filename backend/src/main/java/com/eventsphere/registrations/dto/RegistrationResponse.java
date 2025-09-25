@@ -1,19 +1,18 @@
 package com.eventsphere.registrations.dto;
 
+import com.eventsphere.registrations.model.RegistrationStatus;
+
 import java.time.LocalDateTime;
 
 public record RegistrationResponse(
-    Long id,
-    Long eventId,
-    String eventTitle,
-    LocalDateTime eventStartTime,
-    LocalDateTime eventEndTime,
-    String eventVenue,
-    Integer capacity,
-    Integer seatsAvailable,
-    String status,
-    LocalDateTime registeredAt,
-    Long userId,
-    String userName,
-    String userEmail
+        Long id,
+        Long eventId,
+        String eventName,
+        String eventLocation,
+        LocalDateTime eventStartTime,
+        LocalDateTime eventEndTime,
+        RegistrationStatus status,
+        LocalDateTime registeredAt,
+        String qrCode,
+        Boolean isScanned
 ) {}
