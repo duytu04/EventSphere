@@ -11,6 +11,7 @@ public record RegistrationResponse(
         String eventLocation,
         LocalDateTime eventStartTime,
         LocalDateTime eventEndTime,
+        String eventImageUrl,
         RegistrationStatus status,
         LocalDateTime registeredAt,
         String qrCode,

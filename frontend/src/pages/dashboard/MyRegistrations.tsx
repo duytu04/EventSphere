@@ -371,6 +371,7 @@ function MyRegistrations() {
           onClose={handleCloseQR}
           registrationId={selectedRegistration.id}
           eventName={selectedRegistration.eventName}
+          eventImageUrl={selectedRegistration.eventImageUrl}
         />
       )}
     </Box>

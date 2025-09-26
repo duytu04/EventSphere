@@ -11,6 +11,7 @@ export type Registration = {
   eventLocation: string;
   eventStartTime: string;
   eventEndTime?: string;
+  eventImageUrl?: string;
   status: RegistrationStatus;
   registeredAt: string;
   qrCode?: string;

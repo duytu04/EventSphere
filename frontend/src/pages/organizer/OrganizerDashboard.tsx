@@ -185,6 +185,7 @@ export default function OrganizerDashboard() {
     };
 
     const now = Date.now();
+    const threeDaysAgo = now - (3 * 24 * 60 * 60 * 1000); // 3 days in milliseconds
 
     const sortByStart = (list: OrganizerEventPreview[]) =>
       list.sort((a, b) => {
@@ -205,7 +206,8 @@ export default function OrganizerDashboard() {
         return;
       }
 
-      if (!Number.isNaN(startMs) && startMs > now) {
+      // Show events that are upcoming OR ended within the last 3 days
+      if (!Number.isNaN(startMs) && startMs >= threeDaysAgo) {
         upcoming.push(preview);
         return;
       }

@@ -99,9 +99,12 @@ export default function EventsListPage() {
 
     if (view === "upcoming") {
       const now = Date.now();
+      const threeDaysAgo = now - (3 * 24 * 60 * 60 * 1000); // 3 days in milliseconds
       list = list.filter((event) => {
         if (!event.startTime) return true;
-        return new Date(event.startTime).getTime() >= now;
+        const eventTime = new Date(event.startTime).getTime();
+        // Show events that are upcoming OR ended within the last 3 days
+        return eventTime >= threeDaysAgo;
       });
     }
 
@@ -114,9 +117,12 @@ export default function EventsListPage() {
 
   const summary = useMemo(() => {
     const total = items.length;
+    const now = Date.now();
+    const threeDaysAgo = now - (3 * 24 * 60 * 60 * 1000);
     const upcoming = items.filter((event) => {
       if (!event.startTime) return true;
-      return new Date(event.startTime) >= new Date();
+      const eventTime = new Date(event.startTime).getTime();
+      return eventTime >= threeDaysAgo;
     }).length;
     const capacityAvailable = items.reduce((acc, event) => {
       const seats = event.seatsAvailable ?? 0;

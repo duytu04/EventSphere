@@ -7,34 +7,40 @@ import {
   Button,
   Box,
   Typography,
-  CircularProgress,
-  Alert,
+  TextField,
   Stack,
+  Alert,
+  CircularProgress,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import QRCode from "qrcode";
 
-interface QRCodeViewerProps {
+interface QRGeneratorProps {
   open: boolean;
   onClose: () => void;
-  registrationId: number;
+  eventId: number;
   eventName: string;
   eventImageUrl?: string;
 }
 
-export default function QRCodeViewer({ open, onClose, registrationId, eventName, eventImageUrl }: QRCodeViewerProps) {
+export default function QRGenerator({ open, onClose, eventId, eventName, eventImageUrl }: QRGeneratorProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [shortCode, setShortCode] = useState<string>("");
 
-  const generateQR = async () => {
+  // Generate short QR code with event image
+  const generateShortQR = async () => {
     try {
       setLoading(true);
       setError(null);
       
       // Create a short, simple QR code content
-      // Format: EVENT:registrationId:SHORT
-      const qrContent = `EVT:${registrationId}:${Date.now().toString(36).toUpperCase()}`;
+      // Format: EVENT:eventId:SHORT
+      const qrContent = `EVT:${eventId}:${Date.now().toString(36).toUpperCase()}`;
       setShortCode(qrContent);
       
       // Generate QR code with higher error correction for logo
@@ -143,24 +149,49 @@ export default function QRCodeViewer({ open, onClose, registrationId, eventName,
     }
   };
 
+  // Download QR code
+  const downloadQR = () => {
+    if (!qrCodeUrl) return;
+    
+    const link = document.createElement('a');
+    link.download = `qr-code-${eventName.replace(/\s+/g, '-')}-${Date.now()}.png`;
+    link.href = qrCodeUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   useEffect(() => {
     if (open) {
-      generateQR();
+      generateShortQR();
     } else {
       setQrCodeUrl("");
       setError(null);
       setShortCode("");
     }
-  }, [open, registrationId]);
-
+  }, [open, eventId]);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="sm" 
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 3 }
+      }}
+    >
       <DialogTitle>
-        <Typography variant="h6" fontWeight={700}>
-          Vé điện tử - {eventName}
-        </Typography>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Typography variant="h6" fontWeight={700}>
+            Mã QR ngắn gọn - {eventName}
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <CloseRoundedIcon />
+          </IconButton>
+        </Stack>
       </DialogTitle>
+      
       <DialogContent>
         <Stack spacing={3} alignItems="center">
           {loading && (
@@ -206,43 +237,40 @@ export default function QRCodeViewer({ open, onClose, registrationId, eventName,
               </Box>
               
               <Stack spacing={2} alignItems="center" sx={{ width: "100%" }}>
-                <Stack spacing={1} alignItems="center" sx={{ width: "100%" }}>
-                  <Typography variant="body2" color="text.secondary" textAlign="center">
-                    Mã QR ngắn gọn cho sự kiện
-                  </Typography>
-                  <Box
-                    sx={{
-                      p: 1,
-                      border: "1px solid",
-                      borderColor: "divider",
-                      borderRadius: 1,
-                      backgroundColor: "background.paper",
-                      width: "100%",
-                    }}
-                  >
-                    <Typography 
-                      variant="body2" 
-                      fontFamily="monospace" 
-                      textAlign="center"
-                      sx={{ wordBreak: "break-all" }}
-                    >
-                      {shortCode}
-                    </Typography>
-                  </Box>
-                  <Typography variant="caption" color="text.secondary" textAlign="center">
-                    Mã này có thể được sử dụng để check-in thủ công
-                  </Typography>
-                </Stack>
+                <Typography variant="body2" color="text.secondary" textAlign="center">
+                  Mã QR ngắn gọn cho sự kiện
+                </Typography>
+                
+                <TextField
+                  fullWidth
+                  label="Mã QR"
+                  value={shortCode}
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                  size="small"
+                  helperText="Mã này có thể được sử dụng để check-in thủ công"
+                />
+                
+                <Button
+                  variant="contained"
+                  startIcon={<DownloadRoundedIcon />}
+                  onClick={downloadQR}
+                  sx={{ borderRadius: 2 }}
+                >
+                  Tải xuống mã QR
+                </Button>
               </Stack>
             </>
           )}
         </Stack>
       </DialogContent>
+      
       <DialogActions>
         <Button onClick={onClose} variant="outlined">
           Đóng
         </Button>
-        <Button onClick={generateQR} variant="contained" disabled={loading}>
+        <Button onClick={generateShortQR} variant="contained" disabled={loading}>
           Tạo mã QR mới
         </Button>
       </DialogActions>

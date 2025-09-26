@@ -186,12 +186,13 @@ export default function HomePage() {
 
   // upcoming & hot banner
   const now = Date.now();
+  const threeDaysAgo = now - (3 * 24 * 60 * 60 * 1000); // 3 days in milliseconds
   const upcoming = useMemo(
     () =>
       (events || [])
-        .filter((e) => e.startTime && new Date(e.startTime).getTime() >= now)
+        .filter((e) => e.startTime && new Date(e.startTime).getTime() >= threeDaysAgo)
         .sort((a, b) => new Date(a.startTime!).getTime() - new Date(b.startTime!).getTime()),
-    [events, now]
+    [events, now, threeDaysAgo]
   );
   const hotBanner = upcoming[0] || events[0];
 

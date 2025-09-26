@@ -102,6 +102,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 reg.getEvent().getVenue(), // Sửa từ getLocation() thành getVenue()
                 reg.getEvent().getStartTime(),
                 reg.getEvent().getEndTime(),
+                reg.getEvent().getMainImageUrl(), // Thêm ảnh đại diện sự kiện
                 reg.getStatus(),
                 reg.getRegisteredAt(),
                 null, // QR code will be generated on demand
