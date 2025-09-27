@@ -182,6 +182,15 @@ public Event getAdminEventById(Long id) {
   @Transactional
   public Event updateForOrganizer(Long id, EventUpdateRequest req, Long organizerId) {
     Event e = requireOwned(id, organizerId);
+    
+    // Chặn việc cập nhật trực tiếp sự kiện đã được APPROVED
+    if (ApprovalStatus.APPROVED.name().equals(e.getStatus())) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, 
+          "Không thể cập nhật trực tiếp sự kiện đã được duyệt. Vui lòng tạo yêu cầu chỉnh sửa."
+      );
+    }
+    
     return applyUpdate(e, req);
   }
 

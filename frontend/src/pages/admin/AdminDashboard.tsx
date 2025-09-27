@@ -1,7 +1,7 @@
 
 
 
-import { useEffect, useMemo, useState, Fragment, isValidElement } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import {
   Grid,
   Card,
@@ -47,54 +47,16 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
+import { useSnackbar } from "notistack";
+import { fetchAdminMetrics, approveEvent, rejectEvent, AdminMetricsResponse } from "../../features/admin/adminMetricsApi";
+import NotificationBell from "../../components/common/NotificationBell";
 
 // ---- Types ----
 export type Role = "ADMIN" | "ORGANIZER" | "USER";
 export type EventStatus = "APPROVED" | "PENDING_APPROVAL" | "REJECTED" | "DRAFT";
 type TimeRange = "today" | "7d" | "30d" | "all";
 
-interface Kpis {
-  usersTotal: number;
-  usersByRole: Record<Role, number>;
-  eventsTotal: number;
-  eventsByStatus: Record<EventStatus, number>;
-  registrationsTotal: number;
-  attendanceTotal: number;
-  capacityUtilizationPct: number;
-}
-interface PendingEventSummary {
-  id: number;
-  name: string;
-  organizerName: string;
-  startTime: string; // ISO
-  capacity: number;
-}
-interface RecentRegistration {
-  id: number;
-  eventId: number;
-  eventName: string;
-  studentEmail: string;
-  registeredOn: string; // ISO
-}
-interface CapacityHotspot {
-  eventId: number;
-  eventName: string;
-  capacity: number;
-  seatsAvailable: number;
-}
-interface AdminMetricsDto {
-  kpis: Kpis;
-  pendingEvents: PendingEventSummary[];
-  recentRegistrations: RecentRegistration[];
-  capacityHotspots: CapacityHotspot[];
-  lastUpdated: string; // ISO
-}
-
 // ---- Config ----
-const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL ?? "http://localhost:6868";
-const METRICS_URL = `${API_BASE}/api/admin/metrics`;
-const APPROVE_URL = (id: number) => `${API_BASE}/api/admin/events/${id}/approve`;
-const REJECT_URL = (id: number) => `${API_BASE}/api/admin/events/${id}/reject`;
 
 // ---- Helpers ----
 const nf = new Intl.NumberFormat();
@@ -114,7 +76,7 @@ function EmptyState({ title, desc }: { title: string; desc?: string }) {
 
 // ---- Data Hook ----
 function useAdminMetrics() {
-  const [data, setData] = useState<AdminMetricsDto | null>(null);
+  const [data, setData] = useState<AdminMetricsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -122,41 +84,11 @@ function useAdminMetrics() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(METRICS_URL, { headers: { "Content-Type": "application/json" } });
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      const json = (await res.json()) as AdminMetricsDto;
-      setData(json);
+      const metrics = await fetchAdminMetrics();
+      setData(metrics);
     } catch (e: any) {
-      console.warn("/api/admin/metrics failed — using demo payload.", e);
-      const demo: AdminMetricsDto = {
-        kpis: {
-          usersTotal: 421,
-          usersByRole: { ADMIN: 2, ORGANIZER: 19, USER: 400 },
-          eventsTotal: 58,
-          eventsByStatus: { APPROVED: 36, PENDING_APPROVAL: 8, REJECTED: 3, DRAFT: 11 },
-          registrationsTotal: 1320,
-          attendanceTotal: 987,
-          capacityUtilizationPct: 73,
-        },
-        pendingEvents: [
-          { id: 101, name: "AI Day 2025", organizerName: "Khoa CNTT", startTime: new Date().toISOString(), capacity: 250 },
-          { id: 102, name: "Hội thảo An toàn thông tin", organizerName: "Trung tâm ATTT", startTime: new Date().toISOString(), capacity: 150 },
-          { id: 103, name: "Robotics Challenge", organizerName: "CLB Robotics", startTime: new Date().toISOString(), capacity: 90 },
-        ],
-        recentRegistrations: [
-          { id: 1, eventId: 31, eventName: "Tech Talk", studentEmail: "sv001@univ.edu", registeredOn: new Date().toISOString() },
-          { id: 2, eventId: 42, eventName: "Web3 Intro", studentEmail: "sv045@univ.edu", registeredOn: new Date().toISOString() },
-          { id: 3, eventId: 17, eventName: "AI Day 2025", studentEmail: "sv210@univ.edu", registeredOn: new Date().toISOString() },
-        ],
-        capacityHotspots: [
-          { eventId: 31, eventName: "Tech Talk", capacity: 100, seatsAvailable: 4 },
-          { eventId: 42, eventName: "Web3 Intro", capacity: 80, seatsAvailable: 2 },
-          { eventId: 55, eventName: "CTF Campus", capacity: 120, seatsAvailable: 11 },
-        ],
-        lastUpdated: new Date().toISOString(),
-      };
-      setData(demo);
-      setError(e?.message ?? "Fetch error");
+      console.error("Failed to fetch admin metrics:", e);
+      setError(e?.response?.data?.message || e?.message || "Không thể tải dữ liệu");
     } finally {
       setLoading(false);
     }
@@ -262,19 +194,13 @@ export default function AdminDashboard() {
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
   const [refreshSec, setRefreshSec] = useState<number>(30);
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const [busyId, setBusyId] = useState<number | null>(null);
-  const [snack, setSnack] = useState<{ open: boolean; msg: string; severity: "success" | "error" | "info" }>({
-    open: false,
-    msg: "",
-    severity: "info",
-  });
 
-  // Đảm bảo portal của Snackbar gắn vào #root (tránh removeChild race khi unmount)
-  const portalContainer = (typeof document !== "undefined" && document.getElementById("root")) || undefined;
 
   // Auto refresh
   useEffect(() => {
@@ -306,30 +232,35 @@ export default function AdminDashboard() {
   }, [data]);
 
   // Quick Approve/Reject
-  const approve = async (id: number) => {
+  const handleApprove = async (id: number) => {
     try {
       setBusyId(id);
-      const res = await fetch(APPROVE_URL(id), { method: "POST" });
-      if (!res.ok) throw new Error("Approve failed");
-      setSnack({ open: true, msg: `Đã duyệt sự kiện #${id}`, severity: "success" });
+      await approveEvent(id);
+      enqueueSnackbar(`Đã duyệt sự kiện #${id}`, { variant: "success" });
       refetch();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      setSnack({ open: true, msg: "Không thể duyệt sự kiện. Kiểm tra server logs.", severity: "error" });
+      enqueueSnackbar(
+        e?.response?.data?.message || "Không thể duyệt sự kiện. Vui lòng thử lại.",
+        { variant: "error" }
+      );
     } finally {
       setBusyId(null);
     }
   };
-  const reject = async (id: number) => {
+
+  const handleReject = async (id: number) => {
     try {
       setBusyId(id);
-      const res = await fetch(REJECT_URL(id), { method: "POST" });
-      if (!res.ok) throw new Error("Reject failed");
-      setSnack({ open: true, msg: `Đã từ chối sự kiện #${id}`, severity: "success" });
+      await rejectEvent(id);
+      enqueueSnackbar(`Đã từ chối sự kiện #${id}`, { variant: "success" });
       refetch();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      setSnack({ open: true, msg: "Không thể từ chối sự kiện. Kiểm tra server logs.", severity: "error" });
+      enqueueSnackbar(
+        e?.response?.data?.message || "Không thể từ chối sự kiện. Vui lòng thử lại.",
+        { variant: "error" }
+      );
     } finally {
       setBusyId(null);
     }
@@ -383,6 +314,7 @@ export default function AdminDashboard() {
       </Stack>
 
       <Stack direction="row" spacing={1} alignItems="center" justifyContent={{ xs: "space-between", md: "flex-end" }}>
+        <NotificationBell />
         <Tooltip title="Tải xuống báo cáo CSV (stub)" disablePortal>
           <span>
             <IconButton aria-label="export" disabled={loading}>
@@ -483,6 +415,24 @@ export default function AdminDashboard() {
         </Grid>
       </Grid>
 
+      {/* Notification Stats Row */}
+      {data?.notificationStats && (
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid item xs={12} md={3}>
+            <KpiCard
+              title="Thông báo chưa đọc"
+              value={loading ? <Skeleton width={60} /> : (data.notificationStats.totalUnread ?? 0)}
+              icon={<PendingActionsIcon fontSize="large" />}
+              subtitle={`Chỉnh sửa: ${data.notificationStats.editRequestUnread ?? 0}`}
+              alert={data.notificationStats.totalUnread > 0 ? "warning" : "success"}
+            />
+          </Grid>
+        </Grid>
+      )}
+
+      <Grid container spacing={2} sx={{ mt: 1 }}>
+      </Grid>
+
       <Grid container spacing={2} sx={{ mt: 1 }}>
         {/* Pending approvals */}
         <Grid item xs={12} md={6}>
@@ -520,7 +470,7 @@ export default function AdminDashboard() {
                           size="small"
                           variant="outlined"
                           color="success"
-                          onClick={(ev) => { ev.stopPropagation(); approve(e.id); }}
+                          onClick={(ev) => { ev.stopPropagation(); handleApprove(e.id); }}
                           disabled={busyId === e.id}
                           startIcon={<CheckCircleIcon />}
                         >
@@ -530,7 +480,7 @@ export default function AdminDashboard() {
                           size="small"
                           variant="outlined"
                           color="error"
-                          onClick={(ev) => { ev.stopPropagation(); reject(e.id); }}
+                          onClick={(ev) => { ev.stopPropagation(); handleReject(e.id); }}
                           disabled={busyId === e.id}
                           startIcon={<DoDisturbIcon />}
                         >
@@ -690,27 +640,14 @@ export default function AdminDashboard() {
         </Grid>
       </Grid>
 
-      {/* Error surface (non-blocking because we fallback to demo) */}
+      {/* Error surface */}
       {error && (
         <Box sx={{ mt: 2 }}>
-          <Alert severity="warning" variant="outlined">
-            Không tải được metrics từ API: {error}. Đang hiển thị dữ liệu demo.
+          <Alert severity="error" variant="outlined">
+            Không thể tải dữ liệu: {error}
           </Alert>
         </Box>
       )}
-
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={2500}
-        onClose={() => setSnack({ ...snack, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        container={portalContainer}
-        TransitionProps={{ appear: false }}
-      >
-        <Alert onClose={() => setSnack({ ...snack, open: false })} severity={snack.severity} sx={{ width: "100%" }}>
-          {snack.msg}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

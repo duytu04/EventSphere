@@ -16,8 +16,8 @@ import {
   Typography,
 } from "@mui/material";
 import DOMPurify from "dompurify";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { alpha, useTheme } from "@mui/material/styles";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
@@ -192,7 +192,13 @@ export default function EventEditor() {
       navigate("/organizer/events", { replace: true });
     } catch (err: any) {
       console.error(err);
-      const message = err?.response?.data?.message ?? err?.message ?? "Không thể lưu sự kiện";
+      let message = err?.response?.data?.message ?? err?.message ?? "Không thể lưu sự kiện";
+      
+      // Xử lý lỗi 403 - sự kiện đã được duyệt, cần tạo EventEditRequest
+      if (err?.response?.status === 403) {
+        message = "Sự kiện đã được duyệt, không thể chỉnh sửa trực tiếp. Vui lòng tạo yêu cầu chỉnh sửa thông qua trang quản lý sự kiện.";
+      }
+      
       setErrorMessage(message);
     } finally {
       setSaving(false);
@@ -245,24 +251,38 @@ export default function EventEditor() {
 
                 <Stack spacing={1}>
                   <Typography variant="subtitle1" fontWeight={600}>Mô tả chi tiết</Typography>
-                  <ReactQuill
-                    theme="snow"
-                    value={form.description}
-                    onChange={(html) => handleChange("description", html)}
-                    readOnly={isBusy}
-                    placeholder="Soạn nội dung sự kiện với đầy đủ định dạng..."
-                    modules={{
-                      toolbar: [
-                        [{ header: [1, 2, 3, false] }],
-                        ["bold", "italic", "underline", "strike"],
-                        [{ list: "ordered" }, { list: "bullet" }],
-                        ["blockquote", "code-block"],
-                        ["link", "image"],
-                        [{ align: [] }],
-                        ["clean"],
-                      ],
+                  <Box
+                    sx={{
+                      "& .ql-editor": {
+                        minHeight: 150,
+                        fontSize: "16px",
+                      },
+                      "& .ql-toolbar": {
+                        borderTopLeftRadius: 8,
+                        borderTopRightRadius: 8,
+                      },
+                      "& .ql-container": {
+                        borderBottomLeftRadius: 8,
+                        borderBottomRightRadius: 8,
+                      },
                     }}
-                  />
+                  >
+                    <ReactQuill
+                      value={form.description}
+                      onChange={(html) => handleChange("description", html)}
+                      readOnly={isBusy}
+                      placeholder="Soạn nội dung sự kiện với đầy đủ định dạng..."
+                      modules={{
+                        toolbar: [
+                          [{ header: [1, 2, 3, false] }],
+                          ["bold", "italic", "underline", "strike"],
+                          [{ list: "ordered" }, { list: "bullet" }],
+                          ["link", "image"],
+                          ["clean"],
+                        ],
+                      }}
+                    />
+                  </Box>
                 </Stack>
 
                 <Stack spacing={1.5}>

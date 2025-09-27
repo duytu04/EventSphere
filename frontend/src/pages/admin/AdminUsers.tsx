@@ -53,7 +53,8 @@ function CreateUserDialog(props: {
       reset();
       onClose();
     } catch (e: any) {
-      alert(e.message || "Create failed");
+      const errorMessage = e.response?.data?.message || e.message || "Create failed";
+      alert(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -126,7 +127,8 @@ function EditUserDialog(props: {
       onUpdated(u);
       onClose();
     } catch (e: any) {
-      alert(e.message || "Update failed");
+      const errorMessage = e.response?.data?.message || e.message || "Update failed";
+      alert(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -178,7 +180,8 @@ function RolesDialog(props: {
       onUpdated(u);
       onClose();
     } catch (e: any) {
-      alert(e.message || "Set roles failed");
+      const errorMessage = e.response?.data?.message || e.message || "Set roles failed";
+      alert(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -243,7 +246,8 @@ export default function AdminUsers() {
       setRows(content);
       setRowCount(Number(res?.totalElements || 0));
     } catch (e: any) {
-      enqueueSnackbar(e.message || "Load failed", { variant: "error" });
+      const errorMessage = e.response?.data?.message || e.message || "Load failed";
+      enqueueSnackbar(errorMessage, { variant: "error" });
     } finally {
       setLoading(false);
     }
@@ -264,7 +268,8 @@ export default function AdminUsers() {
       fetchData();
       enqueueSnackbar("Deleted", { variant: "success" });
     } catch (e: any) {
-      enqueueSnackbar(e.message || "Delete failed", { variant: "error" });
+      const errorMessage = e.response?.data?.message || e.message || "Delete failed";
+      enqueueSnackbar(errorMessage, { variant: "error" });
     }
   };
 
@@ -273,7 +278,8 @@ export default function AdminUsers() {
       const u = await enableUser(id, enabled);
       onUpdated(u);
     } catch (e: any) {
-      enqueueSnackbar(e.message || "Enable/Disable failed", { variant: "error" });
+      const errorMessage = e.response?.data?.message || e.message || "Enable/Disable failed";
+      enqueueSnackbar(errorMessage, { variant: "error" });
     }
   };
 

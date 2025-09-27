@@ -9,6 +9,9 @@ import com.eventsphere.events.repo.EventRepository;
 import com.eventsphere.users.model.User;
 import com.eventsphere.users.repo.UserRepository;
 import com.eventsphere.users.repo.UserRepository.RoleCount;
+import com.eventsphere.registrations.model.Registration;
+import com.eventsphere.registrations.repo.RegistrationRepository;
+import com.eventsphere.admin.repo.AdminNotificationRepository;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -33,22 +36,29 @@ public class AdminMetricsService {
 
   private final UserRepository userRepo;
   private final EventRepository eventRepo;
+  private final RegistrationRepository registrationRepo;
+  private final AdminNotificationRepository notificationRepo;
 
-  public AdminMetricsService(UserRepository userRepo, EventRepository eventRepo) {
+  public AdminMetricsService(UserRepository userRepo, EventRepository eventRepo, RegistrationRepository registrationRepo, AdminNotificationRepository notificationRepo) {
     this.userRepo = userRepo;
     this.eventRepo = eventRepo;
+    this.registrationRepo = registrationRepo;
+    this.notificationRepo = notificationRepo;
   }
 
   public AdminMetricsResponse snapshot() {
     Kpis kpis = collectKpis();
     List<PendingEventSummary> pending = collectPendingEvents();
+    List<AdminMetricsResponse.RecentRegistration> recentRegistrations = collectRecentRegistrations();
     List<CapacityHotspot> hotspots = collectCapacityHotspots();
+    AdminMetricsResponse.NotificationStats notificationStats = collectNotificationStats();
 
     return new AdminMetricsResponse(
         kpis,
         pending,
-        List.of(),
+        recentRegistrations,
         hotspots,
+        notificationStats,
         Instant.now()
     );
   }
@@ -124,6 +134,33 @@ public class AdminMetricsService {
     return user.getFullName() != null && !user.getFullName().isBlank()
         ? user.getFullName()
         : user.getEmail();
+  }
+
+  private List<AdminMetricsResponse.RecentRegistration> collectRecentRegistrations() {
+    return registrationRepo.findAll().stream()
+        .sorted((a, b) -> b.getRegisteredAt().compareTo(a.getRegisteredAt()))
+        .limit(5)
+        .map(reg -> new AdminMetricsResponse.RecentRegistration(
+            reg.getId(),
+            reg.getEvent().getEventId(),
+            reg.getEvent().getTitle(),
+            reg.getUser().getEmail(),
+            toInstant(reg.getRegisteredAt())
+        ))
+        .toList();
+  }
+
+  private AdminMetricsResponse.NotificationStats collectNotificationStats() {
+    long totalUnread = notificationRepo.countUnreadNotifications();
+    long editRequestUnread = notificationRepo.countUnreadEditRequests();
+    
+    return new AdminMetricsResponse.NotificationStats(
+        totalUnread,
+        editRequestUnread,
+        0L, // approvalRequestUnread - implement later
+        0L, // userRegistrationUnread - implement later
+        0L  // systemAlertUnread - implement later
+    );
   }
 
   private List<CapacityHotspot> collectCapacityHotspots() {

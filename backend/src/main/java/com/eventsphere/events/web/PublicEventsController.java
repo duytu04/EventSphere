@@ -91,7 +91,7 @@ public class PublicEventsController {
         event.getVenue(),
         event.getStartTime(),
         event.getEndTime(),
-        event.getMainImageUrl(), // Thêm eventImageUrl
+        event.getMainImageUrl(),
         registration.getStatus(),
         registration.getRegisteredAt(),
         null,

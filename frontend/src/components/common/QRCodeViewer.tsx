@@ -17,11 +17,12 @@ interface QRCodeViewerProps {
   open: boolean;
   onClose: () => void;
   registrationId: number;
+  eventId: number;
   eventName: string;
   eventImageUrl?: string;
 }
 
-export default function QRCodeViewer({ open, onClose, registrationId, eventName, eventImageUrl }: QRCodeViewerProps) {
+export default function QRCodeViewer({ open, onClose, registrationId, eventId, eventName, eventImageUrl }: QRCodeViewerProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +34,8 @@ export default function QRCodeViewer({ open, onClose, registrationId, eventName,
       setError(null);
       
       // Create a short, simple QR code content
-      // Format: EVENT:registrationId:SHORT
-      const qrContent = `EVT:${registrationId}:${Date.now().toString(36).toUpperCase()}`;
+      // Format: EVT:eventId:SHORT (backend expects eventId, not registrationId)
+      const qrContent = `EVT:${eventId}:${Date.now().toString(36).toUpperCase()}`;
       setShortCode(qrContent);
       
       // Generate QR code with higher error correction for logo

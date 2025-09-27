@@ -26,9 +26,10 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import BadgeIcon from "@mui/icons-material/Badge";
 import AddIcon from "@mui/icons-material/Add";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import EditIcon from "@mui/icons-material/Edit";
 import { useMemo, useState, KeyboardEvent } from "react";
 
-type TabKey = "dashboard" | "events" | "organizers" | "users";
+type TabKey = "dashboard" | "events" | "organizers" | "users" | "edit-requests";
 
 const TAB_ITEMS: Array<{
   key: TabKey;
@@ -65,6 +66,13 @@ const TAB_ITEMS: Array<{
     to: "/admin/users",
     match: (p) => p.startsWith("/admin/users"),
   },
+  {
+    key: "edit-requests",
+    label: "Edit Requests",
+    icon: <EditIcon fontSize="small" />,
+    to: "/admin/edit-requests",
+    match: (p) => p.startsWith("/admin/edit-requests"),
+  },
 ];
 
 export default function AdminLayout() {
@@ -86,6 +94,8 @@ export default function AdminLayout() {
         return "Organizer Management";
       case "users":
         return "User Management";
+      case "edit-requests":
+        return "Event Edit Requests";
       default:
         return "Admin Dashboard";
     }

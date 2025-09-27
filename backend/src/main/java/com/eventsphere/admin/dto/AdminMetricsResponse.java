@@ -9,6 +9,7 @@ public record AdminMetricsResponse(
     List<PendingEventSummary> pendingEvents,
     List<RecentRegistration> recentRegistrations,
     List<CapacityHotspot> capacityHotspots,
+    NotificationStats notificationStats,
     Instant lastUpdated
 ) {
   public record Kpis(
@@ -42,5 +43,13 @@ public record AdminMetricsResponse(
       String eventName,
       int capacity,
       int seatsAvailable
+  ) {}
+
+  public record NotificationStats(
+      long totalUnread,
+      long editRequestUnread,
+      long approvalRequestUnread,
+      long userRegistrationUnread,
+      long systemAlertUnread
   ) {}
 }

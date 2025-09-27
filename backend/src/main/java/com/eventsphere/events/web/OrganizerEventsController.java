@@ -69,11 +69,23 @@ public class OrganizerEventsController {
   /**
    * API: PUT /api/organizer/events/{id}
    * Organizer cập nhật sự kiện của mình.
+   * Lưu ý: Không thể cập nhật sự kiện đã được APPROVED, cần tạo EventEditRequest.
    */
   @PutMapping("/{id}")
   public EventResponse update(@PathVariable Long id, @Valid @RequestBody EventUpdateRequest req) {
-    var e = svc.updateForOrganizer(id, req, auth.currentUserId());
-    return toDto(e);
+    try {
+      var e = svc.updateForOrganizer(id, req, auth.currentUserId());
+      return toDto(e);
+    } catch (org.springframework.web.server.ResponseStatusException ex) {
+      if (ex.getStatusCode().value() == 403) {
+        // Hướng dẫn tạo EventEditRequest thay vì cập nhật trực tiếp
+        throw new org.springframework.web.server.ResponseStatusException(
+            ex.getStatusCode(), 
+            ex.getReason() + " Sử dụng API POST /api/events/" + id + "/edit-request để tạo yêu cầu chỉnh sửa."
+        );
+      }
+      throw ex;
+    }
   }
 
   /**

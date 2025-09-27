@@ -9,8 +9,8 @@ services:
   backend:
     build: ./backend
     environment:
-      DB_USERNAME: root
-      DB_PASSWORD: root
+      DB_USERNAME: duytu
+      DB_PASSWORD: 17082004Tu.
       JWT_SECRET: dev-secret-change-me
     ports: ["6868:6868"]
     depends_on: [db]

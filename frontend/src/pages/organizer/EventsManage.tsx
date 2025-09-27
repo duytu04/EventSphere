@@ -282,15 +282,27 @@ export default function EventsManage() {
                       </Stack>
 
                       <Stack direction="row" spacing={1.5}>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={<OfflineBoltRoundedIcon fontSize="small" />}
-                          sx={{ borderRadius: 2 }}
-                          onClick={() => navigate(`/organizer/events/${eventId}/edit`)}
-                        >
-                          Tuỳ chỉnh
-                        </Button>
+                        {status === "APPROVED" ? (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<OfflineBoltRoundedIcon fontSize="small" />}
+                            sx={{ borderRadius: 2 }}
+                            onClick={() => navigate(`/organizer/events/${eventId}/edit-request`)}
+                          >
+                            Yêu cầu chỉnh sửa
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<OfflineBoltRoundedIcon fontSize="small" />}
+                            sx={{ borderRadius: 2 }}
+                            onClick={() => navigate(`/organizer/events/${eventId}/edit`)}
+                          >
+                            Tuỳ chỉnh
+                          </Button>
+                        )}
                         <Button
                           variant="contained"
                           size="small"
@@ -372,9 +384,18 @@ export default function EventsManage() {
                     </Stack>
 
                     <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexGrow: 1 }}>
-                      <Button size="small" onClick={() => navigate(`/organizer/events/${eventId}/edit`)}>
-                        Tuỳ chỉnh
-                      </Button>
+                      {status === "APPROVED" ? (
+                        <Button 
+                          size="small" 
+                          onClick={() => navigate(`/organizer/events/${eventId}/edit-request`)}
+                        >
+                          Yêu cầu chỉnh sửa
+                        </Button>
+                      ) : (
+                        <Button size="small" onClick={() => navigate(`/organizer/events/${eventId}/edit`)}>
+                          Tuỳ chỉnh
+                        </Button>
+                      )}
                       <Button size="small" onClick={() => navigate(`/organizer/attendance?event=${eventId}`)}>
                         Điểm danh
                       </Button>

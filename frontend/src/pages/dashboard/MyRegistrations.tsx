@@ -370,6 +370,7 @@ function MyRegistrations() {
           open={qrViewerOpen}
           onClose={handleCloseQR}
           registrationId={selectedRegistration.id}
+          eventId={selectedRegistration.eventId}
           eventName={selectedRegistration.eventName}
           eventImageUrl={selectedRegistration.eventImageUrl}
         />
