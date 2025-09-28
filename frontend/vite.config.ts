@@ -23,7 +23,7 @@ export default defineConfig({
     }
   },
   define: {
-    // Đảm bảo environment variables được thay thế đúng cách
+    // Environment variables for Azure Static Web Apps
     'process.env': process.env
   }
 });
