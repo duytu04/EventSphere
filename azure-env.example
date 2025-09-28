@@ -3,9 +3,16 @@
 
 # Azure Configuration
 AZURE_RESOURCE_GROUP=eventsphere-rg
-AZURE_LOCATION=East US
+AZURE_LOCATION=East US 2
 AZURE_ENVIRONMENT=dev
 AZURE_APP_NAME_PREFIX=eventsphere
+
+# Supported Azure Static Web Apps Regions:
+# - West US 2
+# - Central US
+# - East US 2
+# - West Europe
+# - East Asia
 
 # Database Configuration
 MYSQL_ADMIN_LOGIN=eventsphereadmin

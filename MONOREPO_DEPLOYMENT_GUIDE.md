@@ -56,9 +56,16 @@ cp azure-env.example .env.azure
 ```env
 # Azure Configuration
 AZURE_RESOURCE_GROUP=eventsphere-rg
-AZURE_LOCATION=East US
+AZURE_LOCATION=East US 2
 AZURE_ENVIRONMENT=dev
 AZURE_APP_NAME_PREFIX=eventsphere
+
+# Supported Azure Static Web Apps Regions:
+# - West US 2
+# - Central US  
+# - East US 2
+# - West Europe
+# - East Asia
 
 # Repository Configuration
 REPOSITORY_URL=https://github.com/yourusername/EventSphere
@@ -86,7 +93,7 @@ MAIL_PASSWORD=your-app-password
 ```powershell
 .\deploy-azure.ps1 `
     -ResourceGroupName "eventsphere-rg" `
-    -Location "East US" `
+    -Location "East US 2" `
     -EnvironmentName "dev" `
     -AppNamePrefix "eventsphere" `
     -RepositoryUrl "https://github.com/yourusername/EventSphere" `
@@ -184,6 +191,13 @@ az staticwebapp create `
     --build-command "cd frontend && npm ci && npm run build"
 ```
 
+**Lưu ý**: Azure Static Web Apps chỉ hỗ trợ các vùng sau:
+- **West US 2** (Tây Hoa Kỳ 2)
+- **Central US** (Trung tâm Hoa Kỳ)
+- **East US 2** (Đông Hoa Kỳ 2) - Khuyến nghị cho Việt Nam
+- **West Europe** (Tây Âu)
+- **East Asia** (Đông Á) - Gần Việt Nam nhất
+
 ### 4.2 Cấu hình Environment Variables
 ```powershell
 # Set environment variables cho frontend
@@ -213,7 +227,7 @@ swa deploy --app-location . --output-location dist
 az appservice plan create `
     --name eventsphere-plan `
     --resource-group eventsphere-rg `
-    --location "East US" `
+    --location "East US 2" `
     --sku B1 `
     --is-linux
 ```
@@ -257,7 +271,7 @@ az webapp config container set `
 az mysql flexible-server create `
     --resource-group eventsphere-rg `
     --name eventsphere-mysql `
-    --location "East US" `
+    --location "East US 2" `
     --admin-user eventsphereadmin `
     --admin-password "MySecurePassword123!" `
     --sku-name Standard_B1ms `
@@ -392,7 +406,7 @@ az webapp config appsettings list --name eventsphere-backend --resource-group ev
 # Tạo Application Insights
 az monitor app-insights component create `
     --app eventsphere-insights `
-    --location "East US" `
+    --location "East US 2" `
     --resource-group eventsphere-rg
 
 # Cấu hình cho Web App

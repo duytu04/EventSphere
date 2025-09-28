@@ -8,7 +8,8 @@ param(
     [string]$ResourceGroupName,
     
     [Parameter(Mandatory=$true)]
-    [string]$Location = "East US",
+    [ValidateSet("West US 2", "Central US", "East US 2", "West Europe", "East Asia")]
+    [string]$Location = "East US 2",
     
     [Parameter(Mandatory=$true)]
     [string]$EnvironmentName = "dev",
