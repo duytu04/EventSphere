@@ -3,7 +3,7 @@
 // Backend: Azure App Service (from /backend)
 // Repository: Monorepo structure
 
-@description('Location for all resources (must be supported by Azure Static Web Apps)')
+@description('Location for all resources (must be supported by Azure Static Web Apps and your subscription)')
 @allowed([
   'West US 2',
   'Central US', 
@@ -11,7 +11,7 @@
   'West Europe',
   'East Asia'
 ])
-param location string = 'East US 2'
+param location string = 'West Europe'
 
 @description('Environment name (dev, staging, prod)')
 param environmentName string = 'dev'

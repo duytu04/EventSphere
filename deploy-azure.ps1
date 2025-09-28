@@ -9,7 +9,7 @@ param(
     
     [Parameter(Mandatory=$true)]
     [ValidateSet("West US 2", "Central US", "East US 2", "West Europe", "East Asia")]
-    [string]$Location = "East US 2",
+    [string]$Location = "West Europe",
     
     [Parameter(Mandatory=$true)]
     [string]$EnvironmentName = "dev",
