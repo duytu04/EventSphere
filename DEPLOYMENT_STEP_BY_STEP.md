@@ -72,7 +72,7 @@ MAIL_FROM=noreply@eventsphere.com
 4. **Name**: `EventSphere-Infrastructure`
 5. Click **"Apply"**
 
-### 3.2 Render sẽ tự động tạo 3 services:
+### 3.2 Render sẽ tự động tạo 2 services:
 
 #### 🗄️ MySQL Database Service
 - **Type**: Private Service
@@ -84,10 +84,7 @@ MAIL_FROM=noreply@eventsphere.com
 - **Name**: `eventsphere-backend`
 - **Status**: Đang tạo...
 
-#### 🌐 Frontend Service
-- **Type**: Static Site
-- **Name**: `eventsphere-frontend`  
-- **Status**: Đang tạo...
+**Lưu ý**: Frontend sẽ được deploy riêng ở bước sau
 
 ---
 
@@ -113,17 +110,11 @@ MAIL_FROM=noreply@eventsphere.com
 - `DB_HOST`, `DB_PORT`, `DB_PASSWORD` sẽ tự động được set từ MySQL service
 - Không cần thêm các biến database
 
-### 4.2 Cấu hình Frontend Service
+### 4.2 Cấu hình Frontend Service (Sẽ làm ở bước sau)
 
-**Truy cập Frontend Service:**
-1. Click vào service `eventsphere-frontend`
-2. Vào tab **"Environment"**
-3. Thêm các biến môi trường:
-
-```env
-VITE_API_BASE_URL=https://eventsphere-backend.onrender.com
-VITE_WS_URL=wss://eventsphere-backend.onrender.com/ws
-```
+**Frontend sẽ được deploy riêng:**
+- Sử dụng Static Site deployment
+- Cấu hình environment variables trong bước deploy frontend
 
 ### 4.3 Cấu hình MySQL Service
 
