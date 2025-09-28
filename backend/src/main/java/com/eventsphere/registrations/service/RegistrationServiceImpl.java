@@ -6,6 +6,8 @@ import com.eventsphere.registrations.dto.QrCodeResponse;
 import com.eventsphere.registrations.model.Registration;
 import com.eventsphere.registrations.model.RegistrationStatus;
 import com.eventsphere.registrations.repo.RegistrationRepository;
+import com.eventsphere.events.model.Event;
+import com.eventsphere.events.repo.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 public class RegistrationServiceImpl implements RegistrationService {
 
     private final RegistrationRepository registrationRepo;
+    private final EventRepository eventRepo;
 
     @Override
     @Transactional(readOnly = true)
@@ -92,6 +95,11 @@ public class RegistrationServiceImpl implements RegistrationService {
         // Update status to CANCELLED
         reg.setStatus(RegistrationStatus.CANCELLED);
         registrationRepo.save(reg);
+        
+        // Update available seats count
+        Event event = reg.getEvent();
+        event.setSeatsAvail(event.getSeatsAvail() + 1);
+        eventRepo.save(event);
     }
 
     private RegistrationResponse toResponse(Registration reg) {

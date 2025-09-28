@@ -14,7 +14,7 @@ export function useAuth(){
     login: (email:string,password:string)=>d(loginThunk({email,password})),
     signup: (email:string,password:string,fullName:string)=>d(signupThunk({email,password,fullName})),
     signout: ()=>d(logout()),
-    hasRole: (r:string)=>s.roles.includes(r),
+    hasRole: (r:string)=>s.roles.includes(r) || s.roles.includes(`ROLE_${r}`),
   };
 }
 

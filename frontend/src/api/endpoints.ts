@@ -69,6 +69,8 @@ export const ENDPOINTS = {
     users:   `${API_BASE}/api/admin/users`,
     role:    (id: number | string) => `${API_BASE}/api/admin/users/${id}/role`,
     analytics: `${API_BASE}/api/admin/analytics/overview`,
+    metrics: `${API_BASE}/api/admin/metrics`,
+    notifications: `${API_BASE}/api/admin/notifications`,
   },
 
   // 🔌 WebSocket / STOMP (nếu dùng seats realtime)

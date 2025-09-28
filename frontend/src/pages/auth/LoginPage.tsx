@@ -3,8 +3,8 @@ import { useAuth } from "../../features/auth/useAuth";
 
 export default function LoginPage() {
   const { login, status, error } = useAuth();
-  const [email, setEmail] = useState("admin@eventsphere.local");
-  const [password, setPassword] = useState("Admin@123");
+  const [email, setEmail] = useState("admin@eventsphere.com");
+  const [password, setPassword] = useState("admin123");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

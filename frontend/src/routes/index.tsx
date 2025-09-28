@@ -11,7 +11,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import AdminRoute from "./AdminRoute";
 import OrganizerRoute from "./OrganizerRoute";
 import AdminDashboard from "../pages/admin/AdminDashboard";
-import TestAdminUsers from "../pages/admin/TestAdminUsers";
+import AdminUsersManagement from "../pages/admin/AdminUsersManagement";
 import EventEditRequests from "../pages/admin/EventEditRequests";
 import EventEditRequestDemo from "../pages/organizer/EventEditRequestDemo";
 
@@ -30,7 +30,7 @@ export default function AppRoutes(){
         <ProtectedRoute><AdminRoute><AdminLayout/></AdminRoute></ProtectedRoute>
       }>
         <Route index element={<AdminDashboard/>}/>
-        <Route path="test-users" element={<TestAdminUsers/>}/>
+        <Route path="users" element={<AdminUsersManagement/>}/>
         <Route path="edit-requests" element={<EventEditRequests/>}/>
       </Route>
       <Route path="/organizer/events/:id/edit-request" element={

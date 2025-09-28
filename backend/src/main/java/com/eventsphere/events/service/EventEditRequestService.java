@@ -116,11 +116,48 @@ public class EventEditRequestService {
 
     private void updateEventFromRequest(EventEditRequest request) {
         try {
-            // Parse requested data và cập nhật event
-            // Implementation chi tiết tùy thuộc vào cấu trúc dữ liệu
-            // Ở đây chỉ là ví dụ
             Event event = request.getEvent();
-            // TODO: Implement actual event update logic
+            
+            // Update event fields from the edit request
+            if (request.getTitle() != null && !request.getTitle().trim().isEmpty()) {
+                event.setTitle(request.getTitle().trim());
+            }
+            
+            if (request.getDescription() != null) {
+                event.setDescription(request.getDescription());
+            }
+            
+            if (request.getCategory() != null && !request.getCategory().trim().isEmpty()) {
+                event.setCategory(request.getCategory().trim());
+            }
+            
+            if (request.getVenue() != null && !request.getVenue().trim().isEmpty()) {
+                event.setVenue(request.getVenue().trim());
+            }
+            
+            if (request.getStartTime() != null) {
+                event.setStartTime(request.getStartTime());
+            }
+            
+            if (request.getEndTime() != null) {
+                event.setEndTime(request.getEndTime());
+            }
+            
+            if (request.getCapacity() != null && request.getCapacity() >= 0) {
+                event.setTotalSeats(request.getCapacity());
+                // Update seats available to match new capacity if needed
+                if (event.getSeatsAvail() > request.getCapacity()) {
+                    event.setSeatsAvail(request.getCapacity());
+                }
+            }
+            
+            if (request.getMainImageUrl() != null) {
+                event.setMainImageUrl(request.getMainImageUrl());
+            }
+            
+            // Save the updated event
+            eventRepo.save(event);
+            
         } catch (Exception e) {
             throw new RuntimeException("Failed to update event from request", e);
         }

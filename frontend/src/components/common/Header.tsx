@@ -210,7 +210,7 @@ export default function Header() {
                 </Button>
                 <Button
                   component={Link}
-                  to="/dashboard"
+                  to="/signup"
                   variant="contained"
                   size="medium"
                   sx={{
@@ -393,7 +393,7 @@ export default function Header() {
                           </Button>
                           <Button
                             component={Link}
-                            to="/dashboard"
+                            to="/signup"
                             variant="contained"
                             size="medium"
                             onClick={handlePopoverClose}

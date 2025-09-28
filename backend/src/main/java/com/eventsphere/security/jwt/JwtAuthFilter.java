@@ -83,8 +83,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     if (h != null && h.startsWith("Bearer ")) {
       String token = h.substring(7);
       try {
-        var jws = jwt.parse(token);
-        String email = jws.getBody().getSubject();
+        var claims = jwt.parse(token);
+        String email = claims.getSubject();
 
         var u = users.findByEmail(email).orElse(null);
         if (u != null) {

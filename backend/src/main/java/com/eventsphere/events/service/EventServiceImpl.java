@@ -128,6 +128,7 @@ public Event getAdminEventById(Long id) {
     Event e = repo.findById(id)
         .orElseThrow(() -> new NotFoundException("Event not found: " + id));
     e.setStatus(ApprovalStatus.APPROVED.name());
+    repo.save(e);
   }
 
   @Override
@@ -136,6 +137,7 @@ public Event getAdminEventById(Long id) {
     Event e = repo.findById(id)
         .orElseThrow(() -> new NotFoundException("Event not found: " + id));
     e.setStatus(ApprovalStatus.REJECTED.name());
+    repo.save(e);
   }
 
   @Override

@@ -15,11 +15,11 @@ public class Event {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "id")
+  @Column(name = "event_id")
   private Long eventId; // giữ tên cũ
 
-  @Column(name = "name", nullable = false, length = 200)
-  private String title; // map vào cột name
+  @Column(name = "title", nullable = false, length = 200)
+  private String title; // map vào cột title
 
   @Column(columnDefinition = "TEXT")
   private String description;
@@ -30,8 +30,8 @@ public class Event {
   @Column(length = 60)
   private String category;
 
-  @Column(name = "location", length = 200)
-  private String venue; // map vào cột location
+  @Column(name = "venue", length = 200)
+  private String venue; // map vào cột venue
 
   @Column(name = "start_time", nullable = false)
   private LocalDateTime startTime;
@@ -40,12 +40,12 @@ public class Event {
   private LocalDateTime endTime;
 
   @Builder.Default
-  @Column(name = "capacity", nullable = false)
-  private Integer totalSeats = 0; // map vào cột capacity
+  @Column(name = "total_seats", nullable = false)
+  private Integer totalSeats = 0; // map vào cột total_seats
 
   @Builder.Default
-  @Column(name = "seats_available", nullable = false)
-  private Integer seatsAvail = 0; // map vào cột seats_available
+  @Column(name = "seats_avail", nullable = false)
+  private Integer seatsAvail = 0; // map vào cột seats_avail
 
   @Builder.Default
   @Column(nullable = false, length = 30)

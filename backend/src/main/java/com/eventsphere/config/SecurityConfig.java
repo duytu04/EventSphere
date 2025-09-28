@@ -59,9 +59,9 @@ public class SecurityConfig {
       .authorizeHttpRequests(auth -> auth
         // Cho phép preflight
         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-        // Public
+        // Public endpoints
+        .requestMatchers("/api/ping").permitAll()
         .requestMatchers("/api/auth/**").permitAll()
-       
         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
         .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
         .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
@@ -99,20 +99,15 @@ public class SecurityConfig {
      Embedded test endpoints
      ======================= */
 
-  /** Public ping để kiểm tra server */
+  /** Public ping và whoami endpoints */
   @RestController
   @RequestMapping("/api")
-  public static class PingController {
+  public static class TestController {
     @GetMapping("/ping")
     public Map<String, Object> ping() {
       return Map.of("pong", true);
     }
-  }
 
-  /** Ai đang đăng nhập? (yêu cầu đã qua JWT vì rule chung là authenticated) */
-  @RestController
-  @RequestMapping("/api")
-  public static class WhoAmIController {
     @GetMapping("/whoami")
     public Map<String, Object> whoami(Authentication auth) {
       if (auth == null) return Map.of("authenticated", false);
