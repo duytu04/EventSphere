@@ -1,10 +1,13 @@
 // src/main/java/com/eventsphere/core/exception/GlobalExceptionHandler.java
 package com.eventsphere.core.exception;
 
+import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,6 +15,25 @@ import org.springframework.web.bind.annotation.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+  private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+  @ExceptionHandler(ApiException.class)
+  public ResponseEntity<Object> handleApiException(ApiException ex) {
+    HttpStatus status = ex.getStatus();
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("status", status.value());
+    body.put("error", status.getReasonPhrase());
+    body.put("message", ex.getMessage());
+    body.put("timestamp", OffsetDateTime.now());
+    if (ex.getCode() != null) {
+      body.put("code", ex.getCode());
+    }
+    if (!ex.getExtra().isEmpty()) {
+      body.put("details", ex.getExtra());
+    }
+    return ResponseEntity.status(status).body(body);
+  }
 
   // 400 cho lỗi validate body (ví dụ: @NotBlank, @Size, ...)
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -29,6 +51,7 @@ public class GlobalExceptionHandler {
     body.put("status", 400);
     body.put("message", "Dữ liệu không hợp lệ");
     body.put("errors", errors);
+    body.put("timestamp", OffsetDateTime.now());
     return ResponseEntity.badRequest().body(body);
   }
 
@@ -47,14 +70,17 @@ public class GlobalExceptionHandler {
     if (lengthProblem) {
       return ResponseEntity.badRequest().body(Map.of(
           "status", 400,
-          "message", "Đường dẫn ảnh quá dài (tối đa 512 ký tự)"
+          "message", "Đường dẫn ảnh quá dài (tối đa 512 ký tự)",
+          "timestamp", OffsetDateTime.now()
       ));
     }
 
-    // Trường hợp khác: có thể map thành 409/400 tùy chính sách của bạn
+    log.error("Unhandled data integrity violation", ex);
+
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
         "status", 500,
-        "message", "Lỗi dữ liệu"
+        "message", "Lỗi dữ liệu",
+        "timestamp", OffsetDateTime.now()
     ));
   }
 }

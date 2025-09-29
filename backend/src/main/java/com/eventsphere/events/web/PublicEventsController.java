@@ -3,19 +3,21 @@
 // src/main/java/com/eventsphere/events/web/PublicEventsController.java
 package com.eventsphere.events.web;
 
+import com.eventsphere.core.exception.BadRequestException;
 import com.eventsphere.core.util.PagedResponse;
 import com.eventsphere.events.dto.EventResponse;
-import com.eventsphere.events.dto.EventUpdateRequest;
 import com.eventsphere.events.model.Event;
 import com.eventsphere.events.repo.EventRepository;
 import com.eventsphere.events.service.EventService;
+import com.eventsphere.notifications.eventbus.DomainEvents;
+import com.eventsphere.notifications.eventbus.RegistrationCreatedEvent;
+import com.eventsphere.notifications.eventbus.SeatsChangedEvent;
 import com.eventsphere.registrations.dto.RegistrationResponse;
 import com.eventsphere.registrations.model.Registration;
 import com.eventsphere.registrations.model.RegistrationStatus;
 import com.eventsphere.registrations.repo.RegistrationRepository;
 import com.eventsphere.security.AuthFacade;
 import com.eventsphere.users.repo.UserRepository;
-import com.eventsphere.core.exception.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,39 +53,42 @@ public class PublicEventsController {
   @PostMapping("/{id}/register")
   public ResponseEntity<RegistrationResponse> register(@PathVariable Long id) {
     Long userId = auth.currentUserId();
-    
-    // Kiểm tra event tồn tại và đã được approve
+
     Event event = svc.get(id);
     if (!"APPROVED".equals(event.getStatus())) {
       throw new BadRequestException("Event is not available for registration");
     }
-    
-    // Kiểm tra đã đăng ký chưa
+
     if (registrationRepo.existsByUser_UserIdAndEvent_EventId(userId, id)) {
       throw new BadRequestException("You have already registered for this event");
     }
-    
-    // Kiểm tra còn chỗ không
+
     if (event.getSeatsAvail() <= 0) {
       throw new BadRequestException("Event is full");
     }
-    
-    // Tạo registration - cần lấy User entity từ userId
+
     var user = users.findById(userId)
         .orElseThrow(() -> new BadRequestException("User not found"));
-    
+
     Registration registration = Registration.builder()
         .user(user)
         .event(event)
         .status(RegistrationStatus.CONFIRMED)
         .build();
-    
+
     registration = registrationRepo.save(registration);
-    
-    // Cập nhật số chỗ còn lại
+
     event.setSeatsAvail(event.getSeatsAvail() - 1);
     eventRepo.save(event);
-    
+    DomainEvents.publish(new SeatsChangedEvent(event.getEventId(), event.getSeatsAvail()));
+    DomainEvents.publish(new RegistrationCreatedEvent(
+        registration.getId(),
+        user.getUserId(),
+        user.getEmail(),
+        event.getEventId(),
+        event.getTitle(),
+        registration.getRegisteredAt()));
+
     return ResponseEntity.ok(new RegistrationResponse(
         registration.getId(),
         event.getEventId(),

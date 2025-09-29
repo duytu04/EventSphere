@@ -33,6 +33,7 @@ spring:
           auth: true
           starttls:
             enable: true
+
   jackson:
     serialization:
       write-dates-as-timestamps: false
@@ -41,10 +42,9 @@ jwt:
   secret: "MySuperSecretKeyForEventSphereApplicationThatIsLongEnoughForHS512AlgorithmAndSecureEnoughForProductionUse123456789"
   expiration: 86400   # seconds (1 day)
 admin:
-  email: ${ADMIN_EMAIL:admin@eventsphere.local}
-  password: ${ADMIN_PASSWORD:Admin@123}
-  name: ${ADMIN_NAME:System Administrator}
+  email: 
+  password: 
+  name: 
 logging:
   level:
     org.springframework.security: DEBUG
-

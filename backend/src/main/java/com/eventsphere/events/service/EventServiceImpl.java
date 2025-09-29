@@ -56,7 +56,11 @@ public Event create(EventCreateRequest req, Long organizerId) {
       .organizerId(organizerId)
       .build();
 
-  return repo.save(e);
+  Event saved = repo.save(e);
+  com.eventsphere.notifications.eventbus.DomainEvents.publish(
+      new com.eventsphere.notifications.eventbus.SeatsChangedEvent(saved.getEventId(), saved.getSeatsAvail())
+  );
+  return saved;
 }
 
 
@@ -96,6 +100,12 @@ public Event update(Long id, EventUpdateRequest req) {
 
     e.setTotalSeats(newTotal);
     e.setSeatsAvail(newAvail);
+
+    if (curAvail != newAvail) {
+      com.eventsphere.notifications.eventbus.DomainEvents.publish(
+          new com.eventsphere.notifications.eventbus.SeatsChangedEvent(e.getEventId(), newAvail)
+      );
+    }
 
     return e;
   }

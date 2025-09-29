@@ -1,5 +1,6 @@
 package com.eventsphere.certificates.dto;
 
-public class AttendanceResponse {
-    
+public record AttendanceResponse(boolean success,
+                                  String message,
+                                  CertificateResponse certificate) {
 }
