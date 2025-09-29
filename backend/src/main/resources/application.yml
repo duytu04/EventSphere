@@ -1,4 +1,4 @@
-﻿server:
+server:
   port: 6868
 
 spring:
@@ -15,7 +15,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop  # Auto create/drop tables
+      ddl-auto: update  # Keep schema between restarts
     show-sql: true
     properties:
       hibernate:
