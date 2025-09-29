@@ -37,6 +37,7 @@ public class AdminNotification {
     private String data;
 
     @Column(name = "is_read", nullable = false)
+    @Builder.Default
     private Boolean isRead = false;
 
     @CreationTimestamp
